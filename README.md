@@ -1,5 +1,6 @@
 # O-Suivi
 
+
 Application web de gestion de **probatoires blancs d'orientation** pour la formation AMM (Accompagnateur en Moyenne Montagne).
 
 Remplace le suivi par tableur (Google Sheets) par une application dédiée : configuration d'événements, gestion des départs, suivi temps réel des concurrents, et affichage des résultats.
