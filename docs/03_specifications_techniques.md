@@ -149,9 +149,56 @@ frontend/
 
 ### 3.4 Stockage offline — IndexedDB (Dexie.js)
 
-- **Actions offline** : file d'attente des actions non synchronisées (saisie balise, départ, modifications encadrant). Chaque action porte un horodatage local (ISO 8601).
-- **Cache événement** : snapshot des données de l'événement en cours, mis à jour à chaque sync réussie.
-- **Sync déclenchée** sur : retour en ligne, ouverture/focus de l'app, périodiquement (60s si en ligne).
+**Dépendance** : `dexie` 4.x (wrapper IndexedDB typé).
+
+#### Tables IndexedDB
+
+| Table | Clé | Contenu |
+|-------|-----|---------|
+| `pendingActions` | auto-increment `id` | File d'attente des actions non synchronisées. Chaque entrée stocke l'URL, la méthode HTTP, le body JSON, un `createdAt` (ISO 8601), et un `retryCount`. |
+| `eventCache` | `eventId` | Snapshot des données d'un événement (tracking complet : name, courses, time_gates, competitors). Mis à jour à chaque fetch API réussi. |
+| `eventListCache` | singleton (`"list"`) | Cache de la liste des événements (GET /api/events). |
+
+> 💡 Les **templates sont exclus** du cache offline (opérations de préparation faites avec réseau).
+
+#### Mécanisme de la file d'attente (`pendingActions`)
+
+Quand une action est déclenchée (départ, checkpoint-edit, abandon, etc.) :
+1. L'action est **toujours ajoutée** à `pendingActions` dans IndexedDB
+2. Si en ligne : tentative d'envoi immédiat via l'endpoint individuel normal (ex: `POST .../registrations/{uid}/depart`)
+3. Si l'envoi réussit : l'entrée est supprimée de `pendingActions`
+4. Si l'envoi échoue (réseau KO, timeout) : l'entrée reste en file pour sync ultérieure
+
+> 💡 **Pas d'endpoint batch** : chaque action est rejouée individuellement via son endpoint REST normal. La déduplication est gérée côté serveur (`creation_date + type + sequence`).
+
+#### Sync au retour réseau
+
+**Triggers de synchronisation** :
+- Événement `online` (navigator)
+- Événement `visibilitychange` (page redevient visible)
+- Périodiquement (toutes les 60s si en ligne)
+- Manuellement (bouton "Synchroniser maintenant")
+
+**Algorithme de replay** :
+1. Lire toutes les entrées de `pendingActions` triées par `createdAt` (FIFO)
+2. Pour chaque action, appeler l'endpoint correspondant
+3. Si succès (2xx) ou conflit résolu (4xx — action déjà appliquée) : supprimer de la file
+4. Si erreur réseau : arrêter le replay, réessayer au prochain trigger
+5. Si erreur serveur (5xx) : incrémenter `retryCount`, passer à l'action suivante. Après 5 échecs → marquer comme `failed`
+
+#### Cache événement (`eventCache`)
+
+- **Alimentation** : à chaque réponse API réussie pour un événement (GET /tracking, GET /events/{id}), le résultat est stocké/mis à jour dans IndexedDB
+- **Utilisation** : quand un fetch échoue (réseau KO), les données sont lues depuis le cache IndexedDB au lieu d'afficher une page vide
+- **Périmètre** : tous les événements consultés (pas uniquement l'événement "actif")
+
+#### Indicateur de statut réseau
+
+| État | Affichage |
+|------|-----------|
+| 🟢 En ligne | Données synchronisées |
+| 🔴 Hors-ligne | "N action(s) en attente" + bouton "Synchroniser" |
+| 🔄 Synchronisation | "Synchronisation en cours..." |
 
 ### 3.5 Routing
 

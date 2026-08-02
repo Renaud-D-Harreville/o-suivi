@@ -158,6 +158,13 @@
 **Reason**: The app's #1 constraint is offline-first robustness. Without centralized error handling, network failures are silently swallowed — users get no feedback. Scattered 401 checks are inconsistent. `prompt()` is blocking, unstyled, and unreliable in PWA/mobile contexts. Hardcoded hex colors make design changes expensive.  
 **Impact**: New files: `utils/api.ts`, `utils/clipboard.ts`, `composables/useToast.ts`, `composables/usePrompt.ts`, `components/ToastNotification.vue`, `components/PromptModal.vue`, `types/results.ts`, `styles/variables.css`. Refactored: all composables and views using raw `fetch()`, `SummaryCounters.vue` (performance), `useBeaconEdit.ts` (split), `router/index.ts` (lazy loading + JWT expiry), `env.d.ts` (cleanup).
 
+### 2026-08-03 — Offline sync via individual endpoints (not batch /log)
+
+**Decision**: Offline actions are replayed one-by-one via their normal REST endpoints (e.g. `POST .../depart`, `POST .../checkpoint-edit`) rather than a generic batch `POST .../log` endpoint.  
+**Reason**: Each individual endpoint has strong Pydantic validation and clear semantics. No new backend code required — the frontend handles queuing and replay. Server-side deduplication (`creation_date + type + sequence`) already prevents duplicates.  
+**Scope**: All event views (admin: Config, Départ, Suivi, Résultats) + public beacon editing views. Templates are excluded from offline support.  
+**Impact**: Frontend only — new Dexie.js database with `pendingActions` queue + `eventCache` snapshot tables, sync engine composable, network status indicator. No backend changes.
+
 ### 2026-08-02 — PWA setup with vite-plugin-pwa (prompt update strategy)
 
 **Decision**: Enable PWA support via `vite-plugin-pwa` using Workbox `generateSW` mode and `prompt` update strategy. Precache all static assets. Add `NetworkFirst` runtime caching for `/api/` requests (fallback to cache when offline). Add a `ReloadPrompt.vue` component to notify users of available updates. Add a web app manifest with icons for installability.  

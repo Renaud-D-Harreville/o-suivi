@@ -1,7 +1,7 @@
 # Agents Guidelines — O-Suivi
 
 > Instructions for AI agents working on this project.  
-> **Last updated**: 2026-08-02
+> **Last updated**: 2026-08-03
 
 ---
 
@@ -314,14 +314,23 @@ o-suivi/
         ├── App.vue                    ← Root component (<router-view>)
         ├── env.d.ts                   ← Type declarations
         ├── stores/
-        │   └── event-store.ts         ← Pinia store (current event: name, courses, timeGates, competitors)
+        │   └── event-store.ts         ← Pinia store (current event: name, courses, timeGates, competitors) + IndexedDB cache fallback
         ├── types/
         │   ├── event.ts               ← Beacon, Course, TimeGateEntry, TimeGates
         │   ├── competitor.ts          ← CompetitorBeacon, CheckpointState, TrackingCompetitor
         │   ├── log.ts                 ← LogMetadata, LogEntry, BeaconInput
         │   └── results.ts            ← BeaconResult, SectionResult, CompetitorResult, PublicCompetitorResult, ResultsData, TemplateSummary, EventSummary
+        ├── offline/
+        │   ├── db.ts                  ← Dexie database (pendingActions, eventCache, eventListCache tables)
+        │   ├── pending-action.ts      ← PendingAction interface
+        │   ├── event-cache-service.ts ← Read/write event snapshots in IndexedDB
+        │   ├── sync-engine.ts         ← Offline queue replay, sync triggers, network state refs
+        │   └── __tests__/
+        │       ├── db.test.ts
+        │       ├── event-cache-service.test.ts
+        │       └── sync-engine.test.ts
         ├── utils/
-        │   ├── api.ts                 ← apiFetch() — centralized fetch wrapper (auth, 401, toast)
+        │   ├── api.ts                 ← apiFetch() — centralized fetch wrapper (auth, 401, toast, offline queue for mutations)
         │   ├── clipboard.ts           ← copyToClipboard, copyPhone
         │   ├── date.ts                ← Date formatting helpers (toLocalISO, formatTime, formatMinutes, etc.)
         │   ├── format.ts             ← Results formatting helpers (formatDuration, formatResultTime, formatDelay, globalIcon, sectionIcon, beaconIcon)
@@ -343,6 +352,7 @@ o-suivi/
         │   ├── useDepartureActions.ts ← Departure actions (depart, DNS, registration edits) + pending guard
         │   ├── useToast.ts            ← Global toast notifications (error/success/info)
         │   ├── usePrompt.ts           ← Custom prompt modal (replaces browser prompt())
+        │   ├── useOfflineStatus.ts    ← Offline status composable (online, syncing, pendingCount, syncNow)
         │   └── use-websocket.ts       ← WebSocket composable (connect, reconnect with backoff, visibility-aware)
         ├── router/
         │   └── index.ts               ← Routes (/login, /admin, /admin/events/:id/config, /depart, /suivi) + auth guard
@@ -352,6 +362,7 @@ o-suivi/
         │   ├── ToastNotification.vue  ← Global toast notifications (auto-dismiss, error/success/info)
         │   ├── PromptModal.vue        ← Custom prompt modal (replaces browser prompt())
         │   ├── ReloadPrompt.vue       ← PWA update prompt (new SW version available → reload)
+        │   ├── OfflineIndicator.vue   ← Offline status bar (🟢/🔴/🔄 + pending count + sync button)
         │   ├── suivi/
         │   │   ├── PhTable.vue        ← Time gates table for one competitor
         │   │   ├── BeaconEditTable.vue ← Inline beacon code/time editing table

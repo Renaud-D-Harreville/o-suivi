@@ -80,10 +80,7 @@ Un abandon d'une personne ayant un tracker doit pouvoir être signalé et suivi 
 
 Contrainte critique du projet (montagne sans réseau).
 - ✅ **PWA fait** (2026-08-02) : `vite-plugin-pwa` installé, service worker Workbox (`generateSW`), precache assets, cache `NetworkFirst` API, manifest + icônes, `ReloadPrompt.vue`, meta tags PWA
-- Pas d'IndexedDB / Dexie.js
-- Toutes les actions nécessitent le réseau
-- Reste à implémenter : cache local des données (Dexie.js), file d'attente offline pour les actions, sync au retour réseau
-- Dépendance restante à installer : `dexie`
+- ✅ **Dexie.js fait** (2026-08-03) : IndexedDB via Dexie 4.x, file d'attente offline (`pendingActions`), cache événements (`eventCache`), sync engine (replay via endpoints individuels), indicateur réseau global, composable + composant UI
 
 ---
 

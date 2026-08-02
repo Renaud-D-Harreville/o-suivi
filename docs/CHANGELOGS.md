@@ -4,6 +4,12 @@
 
 ---
 
+## 2026-08-03
+
+- **Offline Dexie.js** : IndexedDB via Dexie 4.x — file d'attente `pendingActions` (mutations POST/PATCH/PUT/DELETE enregistrées localement, replay séquentiel via endpoints individuels au retour réseau), cache `eventCache` (snapshots tracking et liste événements servis depuis IndexedDB quand le réseau échoue), sync engine avec triggers (online/visibility/60s/bouton), indicateur réseau global (🟢/🔴/🔄), composable `useOfflineStatus`, composant `OfflineIndicator.vue`, 21 nouveaux tests unitaires (db, cache-service, sync-engine)
+
+---
+
 ## 2026-08-02
 
 - **PWA** : `vite-plugin-pwa` configuré (mode `generateSW`, stratégie `prompt`), manifest + icônes placeholder, precache assets statiques, cache `NetworkFirst` pour `/api/`, composant `ReloadPrompt.vue`, meta tags PWA dans `index.html`, headers nginx `no-cache` pour `sw.js`
