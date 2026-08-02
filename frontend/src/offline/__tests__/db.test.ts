@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 // Mock IndexedDB via fake-indexeddb for Dexie
 import "fake-indexeddb/auto";
