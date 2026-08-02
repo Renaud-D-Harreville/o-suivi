@@ -13,7 +13,7 @@ const userId = route.params.userId as string;
 interface CheckpointEntry {
   sequence: number;
   code: string | null;
-  timestamp: string | null;
+  passage_time: string | null;
 }
 
 interface CheckpointData {
