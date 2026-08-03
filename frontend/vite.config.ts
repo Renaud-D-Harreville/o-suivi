@@ -7,7 +7,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: "prompt",
-      includeAssets: ["favicon.svg", "logo.svg"],
+      includeAssets: ["favicon.svg", "logo.svg", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
         name: "O-Suivi",
         short_name: "O-Suivi",
