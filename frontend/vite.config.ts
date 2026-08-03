@@ -7,7 +7,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: "prompt",
-      includeAssets: ["pwa-192x192.png", "pwa-512x512.png"],
+      includeAssets: ["favicon.svg", "logo.svg"],
       manifest: {
         name: "O-Suivi",
         short_name: "O-Suivi",
@@ -18,20 +18,15 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "pwa-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
+            src: "logo.svg",
+            sizes: "any",
+            type: "image/svg+xml",
           },
           {
-            src: "pwa-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-          {
-            src: "pwa-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
+            src: "logo.svg",
+            sizes: "any",
+            type: "image/svg+xml",
+            purpose: "maskable",
           },
         ],
       },
