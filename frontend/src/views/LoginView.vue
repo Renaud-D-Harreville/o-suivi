@@ -58,6 +58,9 @@ async function handleLogin() {
       <p v-if="error" class="error">{{ error }}</p>
       <button type="submit">Se connecter</button>
     </form>
+    <div class="footer-link">
+      <router-link to="/events">Événements publics</router-link>
+    </div>
   </div>
 </template>
 
@@ -105,6 +108,21 @@ button {
 
 button:hover {
   background-color: #1565c0;
+}
+
+.footer-link {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.footer-link a {
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.footer-link a:hover {
+  text-decoration: underline;
 }
 </style>
 

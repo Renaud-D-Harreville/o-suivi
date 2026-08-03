@@ -9,6 +9,7 @@ const ResultatsView = () => import("../views/admin/ResultatsView.vue");
 const TemplateConfigView = () => import("../views/admin/TemplateConfigView.vue");
 const PublicResultsView = () => import("../views/public/PublicResultsView.vue");
 const PublicBeaconEditView = () => import("../views/public/PublicBeaconEditView.vue");
+const PublicEventsListView = () => import("../views/public/PublicEventsListView.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -57,6 +58,11 @@ const router = createRouter({
       name: "event-resultats",
       component: ResultatsView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: "/events",
+      name: "public-events-list",
+      component: PublicEventsListView,
     },
     {
       path: "/events/:id",

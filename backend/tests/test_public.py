@@ -64,6 +64,16 @@ def _write_logs(event_id: str, user_id: str, logs: list[dict]) -> None:
     (log_dir / f"{user_id}.json").write_text(json.dumps(logs, indent=2))
 
 
+# --- Public events list ---
+
+
+def test_list_events_no_auth_required() -> None:
+    """GET /api/events should be accessible without authentication."""
+    resp = client.get("/api/events")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+
+
 # --- Public resultats ---
 
 

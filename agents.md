@@ -222,8 +222,9 @@ o-suivi/
 │       ├── depart.md                          ← Departure view spec
 │       ├── suivi.md                           ← Tracking view spec
 │       ├── resultats.md                       ← Results view spec
-│       ├── public_results.md                  ← Public results view spec (no auth)
-│       ├── public_beacon_edit.md              ← Public beacon edit view spec (no auth)
+│       ├── public_results.md                       ← Public results view spec (no auth)
+│       ├── public_beacon_edit.md                    ← Public beacon edit view spec (no auth)
+│       ├── public_events_list.md                    ← Public events list view spec (no auth)
 │       ├── templates/
 │       │   ├── _overview.md                   ← Template navigation (3 tabs)
 │       │   ├── beacons.md                     ← Beacon registry tab
@@ -373,7 +374,8 @@ o-suivi/
             ├── LoginView.vue          ← Login page (organizers)
             ├── public/
             │   ├── PublicResultsView.vue   ← Public results (no auth, masking non-arrived)
-            │   └── PublicBeaconEditView.vue ← Public beacon edit (no auth, PH 2-line, no valid column)
+            │   ├── PublicBeaconEditView.vue ← Public beacon edit (no auth, PH 2-line, no valid column)
+            │   └── PublicEventsListView.vue ← Public events list (no auth, sorted by date)
             └── admin/
                 ├── AdminHomeView.vue  ← Admin home (tabs: Templates + Events)
                 ├── DepartView.vue     ← Departure management (clock, competitor list, inline editing, actions)

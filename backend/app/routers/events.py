@@ -12,8 +12,9 @@ from app.services.tracking_service import TrackingService
 router = APIRouter(
     prefix="/api/events",
     tags=["events"],
-    dependencies=[Depends(require_organizer)],
 )
+
+_auth = [Depends(require_organizer)]
 
 
 def _events() -> EventRepository:
@@ -25,22 +26,22 @@ async def list_events() -> list[EventSummary]:
     return _events().list_all()
 
 
-@router.post("", response_model=EventSummary, status_code=201)
+@router.post("", response_model=EventSummary, status_code=201, dependencies=_auth)
 async def create_event(body: EventCreate) -> EventSummary:
     return _events().create(str(uuid.uuid4()), body.name)
 
 
-@router.get("/{event_id}", response_model=EventDetail)
+@router.get("/{event_id}", response_model=EventDetail, dependencies=_auth)
 async def get_event(event_id: str) -> EventDetail:
     return _events().load(event_id)
 
 
-@router.patch("/{event_id}", response_model=EventDetail)
+@router.patch("/{event_id}", response_model=EventDetail, dependencies=_auth)
 async def update_event(event_id: str, body: EventUpdate) -> EventDetail:
     return _events().update(event_id, body)
 
 
-@router.post("/{event_id}/import-template", response_model=EventDetail)
+@router.post("/{event_id}/import-template", response_model=EventDetail, dependencies=_auth)
 async def import_template(event_id: str) -> EventDetail:
     event = _events().load(event_id)
     if not event.template_id:
@@ -49,7 +50,7 @@ async def import_template(event_id: str) -> EventDetail:
     return _events().import_template(event_id, template_data)
 
 
-@router.get("/{event_id}/tracking", response_model=TrackingResponse)
+@router.get("/{event_id}/tracking", response_model=TrackingResponse, dependencies=_auth)
 async def get_tracking(event_id: str) -> TrackingResponse:
     return TrackingService().get_tracking(event_id)
 

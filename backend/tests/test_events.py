@@ -65,9 +65,10 @@ def test_create_event_empty_name() -> None:
     assert response.status_code == 422
 
 
-def test_list_events_requires_auth() -> None:
+def test_list_events_public_access() -> None:
+    """GET /api/events should be accessible without authentication."""
     response = client.get("/api/events")
-    assert response.status_code == 401
+    assert response.status_code == 200
 
 
 def test_create_event_requires_auth() -> None:

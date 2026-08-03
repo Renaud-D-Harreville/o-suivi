@@ -144,9 +144,10 @@ Un **accès public** alternatif (sans authentification) est disponible via un li
 
 ### 5.5 Accès Public
 
-→ **Spécifications détaillées** : [views/public_results.md](views/public_results.md) et [views/public_beacon_edit.md](views/public_beacon_edit.md)
+→ **Spécifications détaillées** : [views/public_events_list.md](views/public_events_list.md), [views/public_results.md](views/public_results.md) et [views/public_beacon_edit.md](views/public_beacon_edit.md)
 
-Un lien partageable (`/events/{uuid}`) permet à quiconque de consulter les résultats provisoires de tous les concurrents et d'éditer les balises de chaque concurrent, sans authentification. Les modifications sont tracées avec `author_id = "public"`.
+- Une **page de liste des événements** (`/events`) permet de consulter tous les événements disponibles, triés par date décroissante, et d'accéder aux résultats de chacun. Un lien vers cette page est présent sur la page de login.
+- Un lien partageable (`/events/{uuid}`) permet à quiconque de consulter les résultats provisoires de tous les concurrents et d'éditer les balises de chaque concurrent, sans authentification. Les modifications sont tracées avec `author_id = "public"`.
 
 ---
 
