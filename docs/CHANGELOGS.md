@@ -6,6 +6,7 @@
 
 ## 2026-08-03
 
+- **Fix : heure nulle dans le suivi** : correction du bug empêchant d'effacer un horaire de passage dans la vue Suivi encadrants. Extraction d'un utilitaire partagé `beacon-validation.ts` (validation format HH:MM:SS, détection de changement code/heure, conversion payload) mutualisé entre la vue admin et la vue publique d'édition des balises. 23 tests unitaires ajoutés.
 - **Page liste événements publics** : nouvelle vue `/events` accessible sans auth, listant tous les événements triés par date décroissante (frontend `PublicEventsListView.vue`, route, lien depuis login). Endpoint `GET /api/events` rendu public (auth retirée du router level, appliquée par endpoint sur les autres routes).
 - **Offline Dexie.js** : IndexedDB via Dexie 4.x — file d'attente `pendingActions` (mutations POST/PATCH/PUT/DELETE enregistrées localement, replay séquentiel via endpoints individuels au retour réseau), cache `eventCache` (snapshots tracking et liste événements servis depuis IndexedDB quand le réseau échoue), sync engine avec triggers (online/visibility/60s/bouton), indicateur réseau global (🟢/🔴/🔄), composable `useOfflineStatus`, composant `OfflineIndicator.vue`, 21 nouveaux tests unitaires (db, cache-service, sync-engine)
 

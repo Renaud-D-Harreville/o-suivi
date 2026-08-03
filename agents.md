@@ -332,6 +332,7 @@ o-suivi/
         │       └── sync-engine.test.ts
         ├── utils/
         │   ├── api.ts                 ← apiFetch() — centralized fetch wrapper (auth, 401, toast, offline queue for mutations)
+        │   ├── beacon-validation.ts   ← Shared beacon input validation (isTimeValidForSave, hasCodeChanged, hasTimeChanged, codeToPayload)
         │   ├── clipboard.ts           ← copyToClipboard, copyPhone
         │   ├── date.ts                ← Date formatting helpers (toLocalISO, formatTime, formatMinutes, etc.)
         │   ├── format.ts             ← Results formatting helpers (formatDuration, formatResultTime, formatDelay, globalIcon, sectionIcon, beaconIcon)

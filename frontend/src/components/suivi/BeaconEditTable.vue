@@ -2,6 +2,7 @@
 import type { CompetitorBeacon } from "../../types/competitor";
 import type { BeaconInput } from "../../types/log";
 import { formatIsoToHms } from "../../utils/date";
+import { hasCodeChanged, hasTimeChanged } from "../../utils/beacon-validation";
 
 const props = defineProps<{
   beacons: CompetitorBeacon[];
@@ -40,14 +41,10 @@ function hasChanged(bIdx: number): boolean {
   const input = props.inputs[bIdx];
   if (!input) return false;
 
-  const newCode = input.code.toUpperCase().trim();
-  const oldCode = (beacon.enteredCode || "").toUpperCase();
-  const codeValid = newCode.length === 0 || newCode.length === 2;
-  if (newCode !== oldCode && codeValid) return true;
+  if (hasCodeChanged(input.code, beacon.enteredCode || "")) return true;
 
-  const newTime = input.time.trim();
   const oldTime = formatIsoToHms(beacon.passageTime);
-  return newTime !== oldTime;
+  return hasTimeChanged(input.time, oldTime);
 }
 
 function hasPhArrivalChanged(bIdx: number): boolean {

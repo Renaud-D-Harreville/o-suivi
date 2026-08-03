@@ -2,6 +2,7 @@ import { type Ref } from "vue";
 import type { TrackingCompetitor } from "../types/competitor";
 import type { BeaconInput } from "../types/log";
 import { hmsToIsoTimestamp, toLocalISO, formatTime, formatIsoToHms } from "../utils/date";
+import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../utils/beacon-validation";
 import { computeCurrentPh } from "../utils/competitor-state";
 import { apiFetch } from "../utils/api";
 
@@ -21,19 +22,17 @@ export function useBeaconSave(
     const beacon = comp.beacons[bIdx];
     const input = inputs[bIdx];
 
-    const newCode = input.code.toUpperCase().trim();
     const oldCode = (beacon.enteredCode || "").toUpperCase();
     const newTime = input.time.trim();
     const oldTime = formatIsoToHms(beacon.passageTime);
 
-    const codeValid = newCode.length === 0 || newCode.length === 2;
-    const codeChanged = newCode !== oldCode && codeValid;
-    const timeChanged = newTime !== oldTime && newTime.length === 8;
+    const codeChanged = hasCodeChanged(input.code, beacon.enteredCode || "");
+    const timeChanged = hasTimeChanged(input.time, oldTime);
 
     if (!codeChanged && !timeChanged) return;
 
     const codeToSend = codeChanged
-      ? (newCode.length === 2 ? newCode : null)
+      ? codeToPayload(input.code)
       : (oldCode.length === 2 ? oldCode : null);
     const passage_time = hmsToIsoTimestamp(newTime) || null;
     const creation_date = toLocalISO(new Date());
@@ -74,7 +73,7 @@ export function useBeaconSave(
 
     const newTime = (arrivalInputs[beacon.sequence] || "").trim();
     const oldTime = formatIsoToHms(beacon.phArrivalTime);
-    if (newTime === oldTime || newTime.length !== 8) return;
+    if (!hasTimeChanged(arrivalInputs[beacon.sequence] || "", oldTime)) return;
 
     const passage_time = hmsToIsoTimestamp(newTime) || null;
     const creation_date = toLocalISO(new Date());

@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { formatIsoToHms, hmsToIsoTimestamp, toLocalISO, formatTime } from "../../utils/date";
+import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../../utils/beacon-validation";
 
 const route = useRoute();
 const router = useRouter();
@@ -193,16 +194,11 @@ function hasChanged(idx: number): boolean {
   if (!row) return false;
 
   if (row.isArrivalRow) {
-    return row.time.trim() !== row.originalTime;
+    return hasTimeChanged(row.time, row.originalTime);
   }
 
-  const newCode = row.code.toUpperCase().trim();
-  const oldCode = row.originalCode.toUpperCase();
-  const codeValid = newCode.length === 0 || newCode.length === 2;
-  if (newCode !== oldCode && codeValid) return true;
-
-  const newTime = row.time.trim();
-  return newTime !== row.originalTime;
+  if (hasCodeChanged(row.code, row.originalCode)) return true;
+  return hasTimeChanged(row.time, row.originalTime);
 }
 
 async function saveRow(idx: number): Promise<void> {
@@ -229,8 +225,7 @@ async function saveRow(idx: number): Promise<void> {
       }
     } else {
       // Save code + passage time
-      const newCode = row.code.toUpperCase().trim();
-      const codeToSend = newCode.length === 2 ? newCode : null;
+      const codeToSend = codeToPayload(row.code);
       const passage_time = hmsToIsoTimestamp(row.time.trim()) || null;
 
       const res = await fetch(
