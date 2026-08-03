@@ -61,12 +61,21 @@ class BeaconAnalyzer:
     ) -> tuple[str | None, str | None, bool | None]:
         """Return (entered_code, passage_time, valid)."""
         if checkpoint:
-            if expected_code and checkpoint.code:
+            # Both cleared → effectively no checkpoint
+            if checkpoint.code is None and checkpoint.passage_time is None:
+                if sequence in self._state.skipped:
+                    return None, None, False
+                return None, None, None
+
+            # No code entered (but time may exist) → cannot validate
+            if checkpoint.code is None:
+                return None, checkpoint.passage_time, None
+
+            # Code entered → compare with expected
+            if expected_code:
                 valid = checkpoint.code.upper() == expected_code.upper()
-            elif expected_code:
-                valid = False  # Code expected but not provided
             else:
-                valid = True
+                valid = True  # No expected code assigned
             return checkpoint.code, checkpoint.passage_time, valid
 
         if sequence in self._state.skipped:

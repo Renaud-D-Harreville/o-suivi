@@ -219,3 +219,42 @@ def test_results_routechoices_url() -> None:
     resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
     assert resp.json()["routechoices_url"] == "https://routechoices.com/test"
 
+
+def test_results_cleared_checkpoint_shows_no_validity() -> None:
+    """When a code/time is entered then cleared (null), the beacon should show valid=None, not False."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _register(token, eid)
+    _write_logs(eid, uid, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        # Enter code AB for beacon 1
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
+        # Then clear it (checkpoint_edit with null code and null passage_time)
+        {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:15:00Z", "received_at": "2026-09-15T07:15:01Z", "author_id": "usr_001"}, "data": {"sequence": 1, "code": None, "passage_time": None}},
+    ])
+    resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
+    comp = resp.json()["competitors"][0]
+    # Beacon 1 was cleared → should be None (not reached), NOT False (invalid)
+    assert comp["beacons"][0]["valid"] is None
+    assert comp["beacons"][0]["entered_code"] is None
+
+
+def test_results_cleared_code_with_time_shows_no_validity() -> None:
+    """When code is cleared but time remains, validity should be None (cannot validate without code)."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _register(token, eid)
+    _write_logs(eid, uid, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        # Enter code AB + time for beacon 1
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
+        # Edit: clear code but keep time
+        {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:15:00Z", "received_at": "2026-09-15T07:15:01Z", "author_id": "usr_001"}, "data": {"sequence": 1, "code": None, "passage_time": "2026-09-15T07:10:00Z"}},
+    ])
+    resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
+    comp = resp.json()["competitors"][0]
+    # Code cleared but time exists → valid should be None (no code to compare)
+    assert comp["beacons"][0]["valid"] is None
+    assert comp["beacons"][0]["entered_code"] is None
+
+

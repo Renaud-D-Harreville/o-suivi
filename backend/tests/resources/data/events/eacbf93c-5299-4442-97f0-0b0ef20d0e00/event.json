@@ -1,5 +1,5 @@
 {
-  "id": "e65a15f5-2057-4ebe-81e6-ee0c8c8b12ca",
+  "id": "eacbf93c-5299-4442-97f0-0b0ef20d0e00",
   "name": "Tracking Test",
   "date": null,
   "template_id": null,
@@ -70,7 +70,7 @@
   ],
   "registrations": [
     {
-      "user_id": "b278cef8-303e-4f40-8d22-63989f297df3",
+      "user_id": "36ea0602-f529-43ce-ab04-c4b4458508bc",
       "course_number": 1,
       "start_order": null,
       "start_time_planned": null,
