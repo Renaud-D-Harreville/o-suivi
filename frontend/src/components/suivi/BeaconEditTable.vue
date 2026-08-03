@@ -4,12 +4,15 @@ import type { BeaconInput } from "../../types/log";
 import { formatIsoToHms } from "../../utils/date";
 import { hasCodeChanged, hasTimeChanged } from "../../utils/beacon-validation";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   beacons: CompetitorBeacon[];
   inputs: BeaconInput[];
   savingBIdx: number | null;
   phArrivalInputs?: Record<number, string>; // sequence -> HH:MM:SS input value
-}>();
+  showValid?: boolean;
+}>(), {
+  showValid: true,
+});
 
 function phLabel(bIdx: number): string {
   let phIndex = 0;
@@ -64,7 +67,7 @@ function hasPhArrivalChanged(bIdx: number): boolean {
           <th>N°</th>
           <th>PH</th>
           <th>Code</th>
-          <th>Valide</th>
+          <th v-if="showValid">Valide</th>
           <th>Heure</th>
           <th></th>
           <th></th>
@@ -77,7 +80,7 @@ function hasPhArrivalChanged(bIdx: number): boolean {
             <td>{{ beacon.beaconNumber }}</td>
             <td>{{ phLabel(bIdx) }} (arrivée)</td>
             <td>—</td>
-            <td>—</td>
+            <td v-if="showValid">—</td>
             <td>
               <input
                 :value="phArrivalInputs[beacon.sequence] ?? ''"
@@ -132,7 +135,7 @@ function hasPhArrivalChanged(bIdx: number): boolean {
               />
               <span v-else>--</span>
             </td>
-            <td>
+            <td v-if="showValid">
               <template v-if="beacon.enteredCode">
                 {{ beacon.valid === true ? "✅" : beacon.valid === false ? "❌" : "--" }}
               </template>

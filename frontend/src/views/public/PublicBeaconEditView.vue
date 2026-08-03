@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import type { CompetitorBeacon } from "../../types/competitor";
+import type { BeaconInput } from "../../types/log";
 import { formatIsoToHms, hmsToIsoTimestamp, toLocalISO, formatTime } from "../../utils/date";
 import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../../utils/beacon-validation";
+import { apiFetch } from "../../utils/api";
+import BeaconEditTable from "../../components/suivi/BeaconEditTable.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -22,34 +26,19 @@ interface CheckpointData {
   ph_arrivals: Record<number, string>;
 }
 
-// --- Row model for the table ---
-
-interface BeaconRow {
-  sequence: number;
-  beaconNumber: number;
-  tag: string;
-  phLabel: string; // "PH1", "PH2", ... or "" if not a PH
-  isPh: boolean;
-  isArrivalRow: boolean; // true = PH arrival line, false = normal/departure line
-  code: string;
-  time: string;
-  originalCode: string;
-  originalTime: string;
-}
-
 // --- State ---
 
-const eventName = ref("");
 const competitorName = ref("");
-const rows = ref<BeaconRow[]>([]);
+const beacons = ref<CompetitorBeacon[]>([]);
+const inputs = ref<BeaconInput[]>([]);
+const phArrivalInputs = reactive<Record<number, string>>({});
 const loading = ref(true);
-const savingIdx = ref<number | null>(null);
+const savingBIdx = ref<number | null>(null);
 
 // --- Fetch data ---
 
 async function fetchData() {
   try {
-    // Fetch results to get event name, competitor name, and course beacons
     const [resultsRes, checkpointsRes] = await Promise.all([
       fetch(`/api/public/events/${eventId}/resultats`),
       fetch(`/api/public/events/${eventId}/competitors/${userId}/checkpoints`),
@@ -60,15 +49,12 @@ async function fetchData() {
     const resultsData = await resultsRes.json();
     const checkpointData: CheckpointData = await checkpointsRes.json();
 
-    // Find competitor
     const comp = resultsData.competitors.find((c: any) => c.user_id === userId);
     if (!comp) return;
 
-    eventName.value = "Résultats";
     competitorName.value = `${comp.first_name} ${comp.last_name}`;
 
-    // Build rows from competitor beacons (from results)
-    const beacons = comp.beacons as Array<{
+    const rawBeacons = comp.beacons as Array<{
       sequence: number;
       beacon_number: number;
       tag: string;
@@ -81,103 +67,39 @@ async function fetchData() {
       cpMap.set(cp.sequence, cp);
     }
 
-    // Compute PH labels dynamically
-    let phIndex = 0;
-    const phLabels = new Map<number, string>();
-    for (const b of beacons) {
-      if (b.is_ph) {
-        phIndex++;
-        phLabels.set(b.sequence, `PH${phIndex}`);
-      }
-    }
+    const builtBeacons: CompetitorBeacon[] = [];
+    const builtInputs: BeaconInput[] = [];
 
-    // Determine last PH sequence
-    let lastPhSequence: number | null = null;
-    for (let i = beacons.length - 1; i >= 0; i--) {
-      if (beacons[i].is_ph) {
-        lastPhSequence = beacons[i].sequence;
-        break;
-      }
-    }
-
-    const builtRows: BeaconRow[] = [];
-    for (const b of beacons) {
+    for (const b of rawBeacons) {
       const cp = cpMap.get(b.sequence);
-      const isPh = b.is_ph;
-      const label = phLabels.get(b.sequence) || "";
-      const isLast = b.sequence === lastPhSequence;
+      const enteredCode = cp?.code || b.entered_code || null;
+      const passageTime = cp?.passage_time || null;
+      const phArrivalTime = b.is_ph ? (checkpointData.ph_arrivals[b.sequence] || null) : null;
 
-      if (isPh && isLast) {
-        // Last PH: single departure/validation row (code + time, no arrival row)
-        const enteredCode = cp?.code || b.entered_code || "";
-        const passageTime = cp?.passage_time || null;
-        const timeHms = formatIsoToHms(passageTime);
-        builtRows.push({
-          sequence: b.sequence,
-          beaconNumber: b.beacon_number,
-          tag: b.tag,
-          phLabel: label,
-          isPh: true,
-          isArrivalRow: false,
-          code: enteredCode,
-          time: timeHms,
-          originalCode: enteredCode,
-          originalTime: timeHms,
-        });
-      } else if (isPh) {
-        // Non-last PH: arrival row + departure row
-        const arrivalTime = checkpointData.ph_arrivals[b.sequence] || null;
-        const arrivalHms = formatIsoToHms(arrivalTime);
-        builtRows.push({
-          sequence: b.sequence,
-          beaconNumber: b.beacon_number,
-          tag: b.tag,
-          phLabel: label,
-          isPh: true,
-          isArrivalRow: true,
-          code: "",
-          time: arrivalHms,
-          originalCode: "",
-          originalTime: arrivalHms,
-        });
+      builtBeacons.push({
+        sequence: b.sequence,
+        beaconNumber: b.beacon_number,
+        tag: b.tag,
+        is_ph: b.is_ph,
+        expectedCode: null,
+        enteredCode,
+        valid: null,
+        passageTime,
+        phArrivalTime,
+      });
 
-        // Departure row
-        const enteredCode = cp?.code || b.entered_code || "";
-        const passageTime = cp?.passage_time || null;
-        const timeHms = formatIsoToHms(passageTime);
-        builtRows.push({
-          sequence: b.sequence,
-          beaconNumber: b.beacon_number,
-          tag: b.tag,
-          phLabel: label,
-          isPh: true,
-          isArrivalRow: false,
-          code: enteredCode,
-          time: timeHms,
-          originalCode: enteredCode,
-          originalTime: timeHms,
-        });
-      } else {
-        // Normal beacon: single row
-        const enteredCode = cp?.code || b.entered_code || "";
-        const passageTime = cp?.passage_time || null;
-        const timeHms = formatIsoToHms(passageTime);
-        builtRows.push({
-          sequence: b.sequence,
-          beaconNumber: b.beacon_number,
-          tag: b.tag,
-          phLabel: label,
-          isPh: false,
-          isArrivalRow: false,
-          code: enteredCode,
-          time: timeHms,
-          originalCode: enteredCode,
-          originalTime: timeHms,
-        });
+      builtInputs.push({
+        code: enteredCode || "",
+        time: formatIsoToHms(passageTime),
+      });
+
+      if (b.is_ph) {
+        phArrivalInputs[b.sequence] = formatIsoToHms(phArrivalTime);
       }
     }
 
-    rows.value = builtRows;
+    beacons.value = builtBeacons;
+    inputs.value = builtInputs;
   } catch (err) {
     console.error("Failed to fetch beacon data:", err);
   } finally {
@@ -187,69 +109,103 @@ async function fetchData() {
 
 onMounted(fetchData);
 
-// --- Helpers ---
+// --- Save handlers ---
 
-function hasChanged(idx: number): boolean {
-  const row = rows.value[idx];
-  if (!row) return false;
+async function handleSave(bIdx: number): Promise<void> {
+  const beacon = beacons.value[bIdx];
+  const input = inputs.value[bIdx];
+  if (!beacon || !input) return;
 
-  if (row.isArrivalRow) {
-    return hasTimeChanged(row.time, row.originalTime);
-  }
+  const oldCode = beacon.enteredCode || "";
+  const oldTime = formatIsoToHms(beacon.passageTime);
+  const codeChanged = hasCodeChanged(input.code, oldCode);
+  const timeChanged = hasTimeChanged(input.time, oldTime);
+  if (!codeChanged && !timeChanged) return;
 
-  if (hasCodeChanged(row.code, row.originalCode)) return true;
-  return hasTimeChanged(row.time, row.originalTime);
-}
-
-async function saveRow(idx: number): Promise<void> {
-  const row = rows.value[idx];
-  if (!row || !hasChanged(idx)) return;
-
-  savingIdx.value = idx;
+  savingBIdx.value = bIdx;
   try {
+    const codeToSend = codeChanged ? codeToPayload(input.code) : (oldCode.length === 2 ? oldCode.toUpperCase() : null);
+    const passage_time = hmsToIsoTimestamp(input.time.trim()) || null;
     const creation_date = toLocalISO(new Date());
 
-    if (row.isArrivalRow) {
-      // Save PH arrival time via dedicated ph-arrival-edit endpoint
-      const passage_time = hmsToIsoTimestamp(row.time.trim()) || null;
-      const res = await fetch(
-        `/api/public/events/${eventId}/competitors/${userId}/ph-arrival-edit`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ creation_date, passage_time, sequence: row.sequence }),
-        },
-      );
-      if (res.ok) {
-        row.originalTime = row.time;
-      }
-    } else {
-      // Save code + passage time
-      const codeToSend = codeToPayload(row.code);
-      const passage_time = hmsToIsoTimestamp(row.time.trim()) || null;
+    const res = await apiFetch(
+      `/api/public/events/${eventId}/competitors/${userId}/checkpoint-edit`,
+      {
+        method: "POST",
+        body: JSON.stringify({ creation_date, passage_time, sequence: beacon.sequence, code: codeToSend }),
+      },
+    );
 
-      const res = await fetch(
-        `/api/public/events/${eventId}/competitors/${userId}/checkpoint-edit`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ creation_date, passage_time, sequence: row.sequence, code: codeToSend }),
-        },
-      );
-      if (res.ok) {
-        row.originalCode = row.code;
-        row.originalTime = row.time;
-      }
+    if (res.ok) {
+      beacon.enteredCode = codeToSend;
+      beacon.passageTime = passage_time;
+      inputs.value[bIdx] = {
+        code: beacon.enteredCode || "",
+        time: formatIsoToHms(beacon.passageTime),
+      };
     }
   } finally {
-    savingIdx.value = null;
+    savingBIdx.value = null;
   }
 }
 
-function fillCurrentTime(idx: number): void {
-  const row = rows.value[idx];
-  if (row) {
-    row.time = formatTime(new Date());
+async function handleSavePhArrival(bIdx: number): Promise<void> {
+  const beacon = beacons.value[bIdx];
+  if (!beacon || !beacon.is_ph) return;
+
+  const oldTime = formatIsoToHms(beacon.phArrivalTime);
+  if (!hasTimeChanged(phArrivalInputs[beacon.sequence] || "", oldTime)) return;
+
+  savingBIdx.value = bIdx;
+  try {
+    const newTime = (phArrivalInputs[beacon.sequence] || "").trim();
+    const passage_time = hmsToIsoTimestamp(newTime) || null;
+    const creation_date = toLocalISO(new Date());
+
+    const res = await apiFetch(
+      `/api/public/events/${eventId}/competitors/${userId}/ph-arrival-edit`,
+      {
+        method: "POST",
+        body: JSON.stringify({ creation_date, passage_time, sequence: beacon.sequence }),
+      },
+    );
+
+    if (res.ok) {
+      beacon.phArrivalTime = passage_time;
+      phArrivalInputs[beacon.sequence] = formatIsoToHms(beacon.phArrivalTime);
+    }
+  } finally {
+    savingBIdx.value = null;
+  }
+}
+
+function handleFillTime(bIdx: number): void {
+  const input = inputs.value[bIdx];
+  if (input) {
+    input.time = formatTime(new Date());
+  }
+}
+
+function handleFillPhArrivalTime(bIdx: number): void {
+  const beacon = beacons.value[bIdx];
+  if (beacon?.is_ph) {
+    phArrivalInputs[beacon.sequence] = formatTime(new Date());
+  }
+}
+
+function handleCancel(bIdx: number): void {
+  const beacon = beacons.value[bIdx];
+  if (!beacon) return;
+  inputs.value[bIdx] = {
+    code: beacon.enteredCode || "",
+    time: formatIsoToHms(beacon.passageTime),
+  };
+}
+
+function handleCancelPhArrival(bIdx: number): void {
+  const beacon = beacons.value[bIdx];
+  if (beacon?.is_ph) {
+    phArrivalInputs[beacon.sequence] = formatIsoToHms(beacon.phArrivalTime);
   }
 }
 
@@ -268,73 +224,22 @@ function goBack() {
     <main class="content">
       <div v-if="loading" class="loading">Chargement…</div>
 
-      <div v-else-if="rows.length === 0" class="empty">Aucune balise trouvée.</div>
+      <div v-else-if="beacons.length === 0" class="empty">Aucune balise trouvée.</div>
 
-      <table v-else class="beacon-table">
-        <thead>
-          <tr>
-            <th>N°</th>
-            <th>PH</th>
-            <th>Code</th>
-            <th>Heure</th>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(row, idx) in rows"
-            :key="`${row.sequence}-${row.isArrivalRow}`"
-            :class="{
-              'ph-arrival-row': row.isArrivalRow,
-              'ph-departure-row': row.isPh && !row.isArrivalRow,
-            }"
-          >
-            <td>{{ row.beaconNumber }}</td>
-            <td>
-              <template v-if="row.isArrivalRow">{{ row.phLabel }} (arrivée)</template>
-              <template v-else>{{ row.phLabel }}</template>
-            </td>
-            <td>
-              <template v-if="row.isArrivalRow">—</template>
-              <input
-                v-else
-                v-model="row.code"
-                type="text"
-                maxlength="2"
-                placeholder="--"
-                class="edit-input edit-input-code"
-                @keydown.enter="saveRow(idx)"
-              />
-            </td>
-            <td>
-              <input
-                v-model="row.time"
-                type="text"
-                placeholder="HH:MM:SS"
-                pattern="[0-2][0-9]:[0-5][0-9]:[0-5][0-9]"
-                class="edit-input edit-input-time"
-                @keydown.enter="saveRow(idx)"
-              />
-            </td>
-            <td>
-              <button
-                class="time-now-btn"
-                title="Heure actuelle"
-                @click="fillCurrentTime(idx)"
-              >⏱</button>
-            </td>
-            <td>
-              <button
-                :class="['row-save-btn', { active: hasChanged(idx) }]"
-                :disabled="!hasChanged(idx) || savingIdx === idx"
-                title="Enregistrer cette ligne"
-                @click="saveRow(idx)"
-              >✓</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <BeaconEditTable
+        v-else
+        :beacons="beacons"
+        :inputs="inputs"
+        :ph-arrival-inputs="phArrivalInputs"
+        :saving-b-idx="savingBIdx"
+        :show-valid="false"
+        @save="handleSave"
+        @cancel="handleCancel"
+        @fill-time="handleFillTime"
+        @save-ph-arrival="handleSavePhArrival"
+        @cancel-ph-arrival="handleCancelPhArrival"
+        @fill-ph-arrival-time="handleFillPhArrivalTime"
+      />
     </main>
   </div>
 </template>
@@ -385,99 +290,4 @@ function goBack() {
   padding: 3rem;
   color: #666;
 }
-
-.beacon-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-
-.beacon-table th,
-.beacon-table td {
-  padding: 0.4rem 0.5rem;
-  border: 1px solid #e0e0e0;
-  text-align: center;
-}
-
-.beacon-table th {
-  background: #f5f5f5;
-  font-weight: 600;
-}
-
-.ph-arrival-row {
-  background: #fff3e0;
-}
-
-.ph-departure-row {
-  background: #e8f5e9;
-}
-
-.edit-input {
-  padding: 0.25rem 0.3rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
-
-.edit-input-code {
-  width: 36px;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.edit-input-time {
-  width: 72px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.time-now-btn {
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.15rem 0.3rem;
-  line-height: 1;
-}
-
-.time-now-btn:hover {
-  background: #e3f2fd;
-  border-color: #1976d2;
-}
-
-.row-save-btn {
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: default;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 0.15rem 0.4rem;
-  line-height: 1;
-  color: #ccc;
-}
-
-.row-save-btn.active {
-  color: #fff;
-  background-color: #4caf50;
-  border-color: #4caf50;
-  cursor: pointer;
-}
-
-.row-save-btn.active:hover {
-  background-color: #388e3c;
-  border-color: #388e3c;
-}
-
-.row-save-btn:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
 </style>
-
-

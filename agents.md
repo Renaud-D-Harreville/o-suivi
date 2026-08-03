@@ -338,6 +338,7 @@ o-suivi/
         │   ├── format.ts             ← Results formatting helpers (formatDuration, formatResultTime, formatDelay, globalIcon, sectionIcon, beaconIcon)
         │   ├── competitor-state.ts    ← State reconstruction (buildCompetitorBeacons, computeCurrentPh, reconstructTrackingState)
         │   └── __tests__/
+        │       ├── beacon-validation.test.ts ← Unit tests for beacon validation utilities
         │       ├── date.test.ts       ← Unit tests for date utilities
         │       ├── format.test.ts     ← Unit tests for format utilities
         │       └── competitor-state.test.ts ← Unit tests for competitor state logic

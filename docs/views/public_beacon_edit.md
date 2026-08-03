@@ -1,6 +1,6 @@
 # Vue Publique — Édition des balises
 
-> **Statut** : Brouillon  
+aire> **Statut** : Validé  
 > **Référence** : [Vue publique résultats](public_results.md), [Vue suivi §4.3](suivi.md)
 
 ---
@@ -44,6 +44,7 @@ Tableau inspiré de la vue Suivi ([suivi.md §4.3](suivi.md)), avec les différe
 | **Horaire de passage** | Input éditable (HH:MM:SS), pré-rempli avec l'heure de la saisie du code, ou vide |
 | **Bouton ⏱** | Remplit le champ "Horaire de passage" avec l'heure courante (HH:MM:SS) |
 | **Bouton ✓** | Enregistre les modifications de cette ligne (code + horaire) |
+| **Bouton ✗** | Annule les modifications locales et revient aux valeurs serveur (visible uniquement si la ligne a été modifiée) |
 
 ### 3.3 Balises PH — Affichage en 2 lignes
 
@@ -97,7 +98,20 @@ Identiques à [suivi.md §4.3](suivi.md) :
 
 ---
 
-## 7. Lien avec les autres vues
+## 7. Comportement offline
+
+La vue publique d'édition des balises supporte le mode hors-ligne :
+
+- Les modifications (code + horaire) sont **enregistrées localement** dans IndexedDB si le réseau est indisponible
+- Un toast informatif confirme l'enregistrement local : *"Action enregistrée — sera synchronisée au retour réseau"*
+- Les actions en attente sont **rejouées automatiquement** au retour du réseau (même mécanisme que les vues encadrants)
+- L'indicateur offline global (🟢/🔴/🔄) est visible en bas de l'écran
+
+> 💡 Ce comportement est identique à celui de la vue Suivi encadrants. Les deux vues utilisent le même mécanisme de file d'attente offline (`apiFetch` + sync engine).
+
+---
+
+## 8. Lien avec les autres vues
 
 | Vue | Interaction |
 |-----|-------------|
