@@ -16,6 +16,7 @@ class BeaconResult(BaseModel):
 class SectionResult(BaseModel):
     gate: str  # "PH1", "PH2", etc.
     valid: bool | None = None  # True/False/None (not reached)
+    codes_valid: bool | None = None  # True = all codes correct, False = at least one incorrect, None = not reached
     delay: int | None = None  # minutes (negative = too early, positive = too late, None = on time or not reached)
     section_time: int | None = None  # official section time in seconds (PH to PH validation)
     running_time: int | None = None  # running time in seconds (excl. pause)

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import type { PublicCompetitorResult, PublicResultsData } from "../../types/results";
-import { formatDuration, formatResultTime, formatDelay, globalIcon, sectionIcon, beaconIcon } from "../../utils/format";
+import { formatDuration, formatResultTime, formatDelay, sectionIcon, beaconIcon } from "../../utils/format";
 import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const route = useRoute();
@@ -55,14 +55,10 @@ function resultsVisible(c: PublicCompetitorResult): boolean {
   return c.finished && (!c.has_tracker || c.tracker_returned);
 }
 
-function competitorGlobalIcon(c: PublicCompetitorResult): string {
+function arrivalLabel(c: PublicCompetitorResult): string {
   if (!resultsVisible(c)) return "⏳";
-  return globalIcon(c.dns, c.valid_global);
-}
-
-function sectionIconForVisibility(valid: boolean | null, visible: boolean): string {
-  if (!visible) return "-";
-  return sectionIcon(valid);
+  if (c.dns) return "";
+  return c.sex === "F" ? "Arrivée" : "Arrivé";
 }
 </script>
 
@@ -104,19 +100,12 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
             :class="['competitor-card', { dns: comp.dns, expanded: expandedId === comp.user_id }]"
             @click="!comp.dns && toggleExpand(comp.user_id)"
           >
-            <!-- Line 1: Name + global result -->
+            <!-- Line 1: Name + arrival status -->
             <div class="card-line1">
               <span class="name">{{ comp.first_name }} {{ comp.last_name }}</span>
               <span v-if="comp.abandoned" class="badge abandoned">ABANDON</span>
               <span v-if="comp.dns" class="badge dns-badge">DNS</span>
-              <span class="global-result">{{ competitorGlobalIcon(comp) }}</span>
-            </div>
-
-            <!-- Line 2: PH statuses -->
-            <div class="card-line2">
-              <span v-for="section in comp.sections" :key="section.gate" class="ph-status">
-                {{ section.gate }} {{ sectionIconForVisibility(section.valid, resultsVisible(comp)) }}
-              </span>
+              <span class="arrival-label">{{ arrivalLabel(comp) }}</span>
             </div>
 
             <!-- Expanded detail panel -->
@@ -174,7 +163,7 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
                     <thead>
                       <tr>
                         <th>Section</th>
-                        <th>Statut</th>
+                        <th>Codes</th>
                         <th>Retard</th>
                         <th>Temps section</th>
                         <th>Temps course</th>
@@ -184,7 +173,7 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
                     <tbody>
                       <tr v-for="section in comp.sections" :key="section.gate">
                         <td>{{ section.gate }}</td>
-                        <td>{{ sectionIcon(section.valid) }}</td>
+                        <td>{{ sectionIcon(section.codes_valid) }}</td>
                         <td :class="{ 'delay-early': section.delay !== null && section.delay < 0, 'delay-late': section.delay !== null && section.delay > 0 }">
                           {{ formatDelay(section.delay) }}
                         </td>
@@ -332,8 +321,10 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
   flex: 1;
 }
 
-.global-result {
-  font-size: 1.1rem;
+.arrival-label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
 }
 
 .badge {
@@ -354,17 +345,6 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
   color: #546e7a;
 }
 
-.card-line2 {
-  margin-top: 0.25rem;
-  display: flex;
-  gap: 0.75rem;
-  font-size: 0.8rem;
-  color: #555;
-}
-
-.ph-status {
-  white-space: nowrap;
-}
 
 /* --- Detail panel --- */
 

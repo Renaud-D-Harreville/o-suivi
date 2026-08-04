@@ -35,11 +35,13 @@ class SectionValidator:
         running_time = seconds_between(previous_ph_time, ph_arrival)
         pause_time = seconds_between(ph_arrival, validation_time)
         delay = self._compute_delay(section_time)
-        valid = self._compute_validity(validation_time, delay)
+        codes_valid = self._compute_codes_validity(validation_time)
+        valid = self._compute_validity(validation_time, delay, codes_valid)
 
         return SectionResult(
             gate=self._gate.gate,
             valid=valid,
+            codes_valid=codes_valid,
             delay=delay,
             section_time=section_time,
             running_time=running_time,
@@ -64,15 +66,20 @@ class SectionValidator:
             return self._gate.min_f, self._gate.max_f
         return self._gate.min_m, self._gate.max_m
 
-    def _compute_validity(self, validation_time: str | None, delay: int | None) -> bool | None:
+    def _compute_codes_validity(self, validation_time: str | None) -> bool | None:
+        """Check if all beacon codes in this section are correct (ignoring time)."""
+        if not validation_time:
+            return None
+        return all(b.valid is True for b in self._section_beacons)
+
+    def _compute_validity(self, validation_time: str | None, delay: int | None, codes_valid: bool | None) -> bool | None:
         if not validation_time:
             return None
 
         time_ok = delay is None
-        beacons_ok = all(b.valid is True for b in self._section_beacons)
         order_ok = self._check_order()
 
-        return time_ok and beacons_ok and order_ok
+        return time_ok and (codes_valid is True) and order_ok
 
     def _check_order(self) -> bool:
         """Verify beacons were validated in sequence order."""

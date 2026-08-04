@@ -34,22 +34,20 @@ Permettre à quiconque disposant du lien de l'événement de consulter les résu
 
 ### 3.2 Liste des concurrents
 
-Liste triée par **ordre d'arrivée** (premiers arrivés en haut), DNS en fin de liste. Même structure à 2 lignes par concurrent.
+Liste triée par **ordre d'arrivée** (premiers arrivés en haut), DNS en fin de liste.
 
 #### Concurrent arrivé (ou abandon / DNS)
 
 Un concurrent est considéré comme **arrivé** dès lors qu'il a franchi la dernière PH, ou qu'il est en **abandon** ou **DNS**.
 
-- Ligne 1 : Prénom · Nom · Résultat global (✅ VALIDÉ / ❌ NON VALIDÉ)
-- Ligne 2 : PH1 · PH2 · PH3 · … · PHn — chacun avec ✅ / ❌ / `-` (nombre dynamique selon le parcours)
-- Mêmes cas particuliers que [resultats.md](resultats.md) (DNS grisé/barré/non cliquable, Abandon affiché normalement)
+- Ligne unique : Prénom · Nom · **"Arrivé"** (homme) ou **"Arrivée"** (femme) — texte neutre, pas d'indicateur de validation
+- Mêmes cas particuliers que [resultats.md](resultats.md) (DNS grisé/barré/non cliquable, Abandon badge affiché)
+
+> 💡 La vue publique ne montre **aucun indicateur de validation** (ni ✅ ni ❌) dans la liste. Le stagiaire doit ouvrir le détail pour voir ses résultats détaillés.
 
 #### Concurrent non arrivé (encore en course)
 
-- Ligne 1 : Prénom · Nom · ⏳ (sablier — pas de résultat global)
-- Ligne 2 : PH1 `-` · PH2 `-` · … · PHn `-` (tous les statuts masqués)
-
-> 💡 **Règle** : tant qu'un concurrent n'est pas arrivé, aucune information de résultat (validité PH, résultat global) n'est affichée. Cela évite de divulguer des informations pendant l'épreuve.
+- Ligne unique : Prénom · Nom · ⏳ (sablier — pas encore arrivé)
 
 ---
 
@@ -85,8 +83,16 @@ Identique à [resultats.md §4.1](resultats.md) :
 
 ### 4.4 Résumé par section (concurrent arrivé uniquement)
 
-Identique à [resultats.md §4.2](resultats.md) :
-- Retard par PH, temps par section, temps de course, temps de pause, temps en course total, temps total
+Tableau récapitulatif par section :
+
+| Colonne | Contenu |
+|---------|---------|
+| **Section** | Nom de la PH (PH1, PH2…) |
+| **Codes** | ✅ si tous les codes de la section sont corrects, ❌ sinon. Basé sur le champ `codes_valid` (indépendant du respect des temps) |
+| **Retard** | Retard par PH |
+| **Temps section** | Temps officiel de la section |
+| **Temps course** | Temps de course effectif (hors pauses) |
+| **Pause** | Temps de pause |
 
 ### 4.5 Liste détaillée des balises (concurrent arrivé uniquement)
 

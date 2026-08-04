@@ -63,6 +63,9 @@
 
 ## Améliorations frontend (issues review 2026-07-30)
 
+### Mettre une arrivée + bouton arrivée dans suivi encadrant
+
+### Fusionner vue départ et suivi
 
 ### Signaler un abandon avec tracker
 

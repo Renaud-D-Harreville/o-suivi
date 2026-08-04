@@ -13,6 +13,7 @@ export interface BeaconResult {
 export interface SectionResult {
   gate: string;
   valid: boolean | null;
+  codes_valid: boolean | null;
   delay: number | null;
   section_time: number | null;
   running_time: number | null;
