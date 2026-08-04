@@ -10,6 +10,7 @@ const TemplateConfigView = () => import("../views/admin/TemplateConfigView.vue")
 const PublicResultsView = () => import("../views/public/PublicResultsView.vue");
 const PublicBeaconEditView = () => import("../views/public/PublicBeaconEditView.vue");
 const PublicEventsListView = () => import("../views/public/PublicEventsListView.vue");
+const PublicSplitTimesView = () => import("../views/public/PublicSplitTimesView.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -68,6 +69,11 @@ const router = createRouter({
       path: "/events/:id",
       name: "public-results",
       component: PublicResultsView,
+    },
+    {
+      path: "/events/:id/splits",
+      name: "public-splits",
+      component: PublicSplitTimesView,
     },
     {
       path: "/events/:id/competitor/:userId/beacons",

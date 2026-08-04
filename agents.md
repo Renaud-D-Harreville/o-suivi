@@ -223,6 +223,7 @@ o-suivi/
 │       ├── suivi.md                           ← Tracking view spec
 │       ├── resultats.md                       ← Results view spec
 │       ├── public_results.md                       ← Public results view spec (no auth)
+│       ├── public_split_times.md                   ← Public split times comparison view spec (no auth)
 │       ├── public_beacon_edit.md                    ← Public beacon edit view spec (no auth)
 │       ├── public_events_list.md                    ← Public events list view spec (no auth)
 │       ├── templates/
@@ -266,6 +267,7 @@ o-suivi/
 │   │   │   ├── tracking_service.py    ← Données de suivi agrégées (endpoint /tracking)
 │   │   │   ├── checkpoint_service.py  ← Récupération des checkpoints d'un concurrent
 │   │   │   ├── log_service.py         ← Création/append de logs (partagé admin + public)
+│   │   │   ├── split_service.py       ← Calcul des temps intermédiaires comparés (splits)
 │   │   │   └── registration_service.py ← Logique inscriptions (CRUD, déduplication, matching)
 │   │   ├── domain/
 │   │   │   ├── exceptions.py          ← Exceptions domaine (EntityNotFound)
@@ -273,6 +275,7 @@ o-suivi/
 │   │   │   ├── beacon_analyzer.py     ← Analyse des passages balises
 │   │   │   ├── section_validator.py   ← Validation des sections PH
 │   │   │   ├── results_calculator.py  ← Logique métier résultats (validité, finish, tri)
+│   │   │   ├── split_calculator.py    ← Extraction paires de balises + calcul des splits
 │   │   │   └── time_utils.py          ← Utilitaires temps
 │   │   ├── repositories/
 │   │   │   ├── event_repository.py    ← CRUD événements (objets typés)
@@ -287,6 +290,7 @@ o-suivi/
 │   │       ├── registrations.py      ← RegistrationCreate / RegistrationDetail / RegistrationUpdate
 │   │       ├── users.py              ← User
 │   │       ├── results.py            ← BeaconResult / SectionResult / CompetitorResult / ResultsResponse
+│   │       ├── splits.py             ← CompetitorSummary / SplitEntry / BeaconPairSplits / SplitsResponse
 │   │       ├── tracking.py           ← CompetitorTracking / TrackingResponse
 │   │       └── logs.py               ← Event sourcing : métadonnées (LogMetadata), entrées de log polymorphiques (discriminated union LogEntry), et schémas de requête client
 │   └── tests/
@@ -320,7 +324,8 @@ o-suivi/
         │   ├── event.ts               ← Beacon, Course, TimeGateEntry, TimeGates
         │   ├── competitor.ts          ← CompetitorBeacon, CheckpointState, TrackingCompetitor
         │   ├── log.ts                 ← LogMetadata, LogEntry, BeaconInput
-        │   └── results.ts            ← BeaconResult, SectionResult, CompetitorResult, PublicCompetitorResult, ResultsData, TemplateSummary, EventSummary
+        │   ├── results.ts            ← BeaconResult, SectionResult, CompetitorResult, PublicCompetitorResult, ResultsData, TemplateSummary, EventSummary
+        │   └── splits.ts             ← SplitEntry, BeaconPairSplits, CompetitorSummary, SplitsResponse
         ├── offline/
         │   ├── db.ts                  ← Dexie database (pendingActions, eventCache, eventListCache tables)
         │   ├── pending-action.ts      ← PendingAction interface
@@ -377,6 +382,7 @@ o-suivi/
             ├── public/
             │   ├── PublicResultsView.vue   ← Public results (no auth, masking non-arrived)
             │   ├── PublicBeaconEditView.vue ← Public beacon edit (no auth, PH 2-line, no valid column)
+            │   ├── PublicSplitTimesView.vue ← Public split times comparison (no auth, one table per beacon pair)
             │   └── PublicEventsListView.vue ← Public events list (no auth, sorted by date)
             └── admin/
                 ├── AdminHomeView.vue  ← Admin home (tabs: Templates + Events)

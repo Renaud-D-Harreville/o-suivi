@@ -26,6 +26,7 @@ Permettre à quiconque disposant du lien de l'événement de consulter les résu
 
 - **Nom de l'événement** affiché en haut de page
 - Pas de navigation admin (pas de Config/Départ/Suivi)
+- **Lien "⏱ Temps intermédiaires"** : lien vers la page de comparaison des splits (`/events/{uuid}/splits`). Toujours affiché. Voir [public_split_times.md](public_split_times.md)
 - **Lien Routechoices** : affiché **uniquement** si les **2 conditions** suivantes sont remplies :
   1. Le champ `public_routechoices_time` est **renseigné** dans la configuration de l'événement (non null)
   2. L'heure actuelle est **postérieure** à l'heure configurée (combinée avec la date de l'événement)
@@ -119,5 +120,6 @@ Mêmes données que [resultats.md §6](resultats.md), plus :
 |-----|-------------|
 | **Résultats encadrants** | Même données, même affichage. La vue publique ajoute le lien vers l'édition balises |
 | **Édition balises publique** | Lien dans le dépliant de chaque concurrent |
+| **Comparaison splits publique** | Lien dans l'en-tête vers `/events/{uuid}/splits` |
 | **Configuration** | Fournit les bornes PH, les codes attendus et le lien Routechoices |
 

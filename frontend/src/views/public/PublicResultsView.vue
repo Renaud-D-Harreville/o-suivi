@@ -75,6 +75,13 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
       <div v-if="loading" class="loading">Chargement des résultats…</div>
 
       <template v-else-if="resultsData">
+        <!-- Split times link -->
+        <div class="split-times-link">
+          <router-link :to="`/events/${eventId}/splits`">
+            ⏱ Temps intermédiaires
+          </router-link>
+        </div>
+
         <!-- Routechoices link -->
         <div v-if="showRoutechoices && resultsData.routechoices_url" class="routechoices-link">
           <a :href="resultsData.routechoices_url" target="_blank" rel="noopener">
@@ -259,6 +266,19 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
 
 .routechoices-link a {
   color: #1565c0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.split-times-link {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #e8f5e9;
+  border-radius: 8px;
+}
+
+.split-times-link a {
+  color: #2e7d32;
   text-decoration: none;
   font-weight: 500;
 }

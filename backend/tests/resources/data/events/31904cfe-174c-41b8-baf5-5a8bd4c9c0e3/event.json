@@ -1,10 +1,10 @@
 {
-  "id": "eacbf93c-5299-4442-97f0-0b0ef20d0e00",
-  "name": "Tracking Test",
-  "date": null,
+  "id": "31904cfe-174c-41b8-baf5-5a8bd4c9c0e3",
+  "name": "Public Test",
+  "date": "2026-09-15",
   "template_id": null,
   "first_start_time": null,
-  "routechoices_url": null,
+  "routechoices_url": "https://routechoices.com/test",
   "start_mode": null,
   "beacons": [
     {
@@ -18,22 +18,29 @@
       "id": 32,
       "number": 2,
       "tag": "unique",
-      "is_ph": true,
+      "is_ph": false,
       "code": "CD"
     },
     {
       "id": 33,
       "number": 3,
       "tag": "unique",
-      "is_ph": false,
+      "is_ph": true,
       "code": "EF"
     },
     {
       "id": 34,
       "number": 4,
       "tag": "unique",
-      "is_ph": true,
+      "is_ph": false,
       "code": "GH"
+    },
+    {
+      "id": 35,
+      "number": 5,
+      "tag": "unique",
+      "is_ph": true,
+      "code": "IJ"
     }
   ],
   "courses": [
@@ -43,7 +50,8 @@
         31,
         32,
         33,
-        34
+        34,
+        35
       ]
     }
   ],
@@ -70,11 +78,12 @@
   ],
   "registrations": [
     {
-      "user_id": "36ea0602-f529-43ce-ab04-c4b4458508bc",
+      "user_id": "1b412f38-4762-48c0-b5d9-3e2a1ae616d6",
       "course_number": 1,
       "start_order": null,
       "start_time_planned": null,
       "tracker_number": null
     }
-  ]
+  ],
+  "public_routechoices_time": "14:00"
 }

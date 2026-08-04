@@ -306,3 +306,103 @@ def test_public_ph_arrival_edit() -> None:
     assert data["data"]["sequence"] == 3
     assert data["data"]["passage_time"] == "2026-09-15T08:55:00Z"
     assert data["metadata"]["author_id"] == "public"
+
+
+# --- Public splits ---
+
+
+def test_public_splits_no_auth_required() -> None:
+    """Public splits endpoint should be accessible without authentication."""
+    token = _get_token()
+    eid = _create_event(token)
+    resp = client.get(f"/api/public/events/{eid}/splits")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "pairs" in data
+    assert "beacons" in data
+    assert "competitors" in data
+    assert data["event_name"] == "Public Test"
+
+
+def test_public_splits_returns_pairs_for_course() -> None:
+    """Splits should return correct beacon pairs for the configured course."""
+    token = _get_token()
+    eid = _create_event(token)
+    resp = client.get(f"/api/public/events/{eid}/splits")
+    data = resp.json()
+    # Course 1 has beacons [31, 32, 33, 34, 35]
+    # Pairs: (None→31), (31→32), (32→33), (33→34), (34→35)
+    assert len(data["pairs"]) == 5
+    assert data["pairs"][0]["from_beacon_id"] is None
+    assert data["pairs"][0]["to_beacon_id"] == 31
+
+
+def test_public_splits_computes_split_times() -> None:
+    """Splits should compute correct split times for competitors."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _register(token, eid)
+    _write_logs(eid, uid, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:25:00Z", "received_at": "2026-09-15T07:25:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD"}},
+    ])
+    resp = client.get(f"/api/public/events/{eid}/splits")
+    data = resp.json()
+
+    # First pair: Départ → Balise 1 = 10 min = 600 sec
+    first_pair = data["pairs"][0]
+    assert first_pair["from_beacon_id"] is None
+    assert first_pair["to_beacon_id"] == 31
+    assert len(first_pair["splits"]) == 1
+    assert first_pair["splits"][0]["user_id"] == uid
+    assert first_pair["splits"][0]["split_seconds"] == 600
+
+    # Second pair: Balise 1 → Balise 2 = 15 min = 900 sec
+    second_pair = data["pairs"][1]
+    assert second_pair["from_beacon_id"] == 31
+    assert second_pair["to_beacon_id"] == 32
+    assert len(second_pair["splits"]) == 1
+    assert second_pair["splits"][0]["split_seconds"] == 900
+
+
+def test_public_splits_sorted_by_time() -> None:
+    """Splits within a pair should be sorted by split_seconds (fastest first)."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid1 = _register(token, eid, first="Alice", last="Fast")
+    uid2 = _register(token, eid, first="Bob", last="Slow")
+
+    # Alice: 10 min to beacon 1
+    _write_logs(eid, uid1, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid1}, "data": {"sequence": 1, "code": "AB"}},
+    ])
+    # Bob: 20 min to beacon 1
+    _write_logs(eid, uid2, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid2}, "data": {"sequence": 1, "code": "AB"}},
+    ])
+
+    resp = client.get(f"/api/public/events/{eid}/splits")
+    first_pair = resp.json()["pairs"][0]
+    assert len(first_pair["splits"]) == 2
+    assert first_pair["splits"][0]["user_id"] == uid1  # Alice first (faster)
+    assert first_pair["splits"][0]["split_seconds"] == 600
+    assert first_pair["splits"][1]["user_id"] == uid2  # Bob second (slower)
+    assert first_pair["splits"][1]["split_seconds"] == 1200
+
+
+def test_public_splits_excludes_dns() -> None:
+    """DNS competitors should be excluded from splits."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _register(token, eid)
+    _write_logs(eid, uid, [
+        {"log_type": "dns", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"comment": "No show"}},
+    ])
+    resp = client.get(f"/api/public/events/{eid}/splits")
+    data = resp.json()
+    assert len(data["competitors"]) == 0
+
+

@@ -9,9 +9,11 @@ from app.schemas.logs import (
     PhArrivalEditRequest,
 )
 from app.schemas.results import ResultsResponse
+from app.schemas.splits import SplitsResponse
 from app.services.checkpoint_service import CheckpointResponse, CheckpointService
 from app.services.log_service import LogService
 from app.services.results_service import ResultsService
+from app.services.split_service import SplitService
 
 router = APIRouter(
     prefix="/api/public/events/{event_id}",
@@ -24,6 +26,11 @@ PUBLIC_AUTHOR_ID = "public"
 @router.get("/resultats", response_model=ResultsResponse)
 async def get_public_results(event_id: str) -> ResultsResponse:
     return ResultsService().compute(event_id)
+
+
+@router.get("/splits", response_model=SplitsResponse)
+async def get_public_splits(event_id: str) -> SplitsResponse:
+    return SplitService().compute(event_id)
 
 
 @router.get(

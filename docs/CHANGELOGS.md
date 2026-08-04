@@ -4,6 +4,12 @@
 
 ---
 
+## 2026-08-04
+
+- **Vue publique comparaison splits** : nouvelle page `/events/{uuid}/splits` permettant de comparer les temps intermédiaires de tous les concurrents, balise par balise. Un tableau par paire de balises consécutives (ordonnées par numéro/tag), classement par split croissant. Backend : `SplitCalculator` (domain), `SplitService` (orchestration), endpoint `GET /api/public/events/{id}/splits`. Frontend : `PublicSplitTimesView.vue`, types `splits.ts`, route + lien depuis la vue résultats publique. 5 tests backend ajoutés. Docs : `public_split_times.md`, CDC §5.5, `public_results.md` mis à jour.
+
+---
+
 ## 2026-08-03
 
 - **Fix : heure nulle dans le suivi** : correction du bug empêchant d'effacer un horaire de passage dans la vue Suivi encadrants. Extraction d'un utilitaire partagé `beacon-validation.ts` (validation format HH:MM:SS, détection de changement code/heure, conversion payload) mutualisé entre la vue admin et la vue publique d'édition des balises. 23 tests unitaires ajoutés.

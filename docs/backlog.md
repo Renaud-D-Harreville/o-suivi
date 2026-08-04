@@ -132,28 +132,7 @@ Configurer les origines autorisées via variable d'environnement.
 
 Le mécanisme de skip de balises doit être accessible depuis la vue Suivi (côté encadrant), en plus de l'interface stagiaire. Il faut ajouter un bouton/champ dans le dépliant d'un concurrent (vue Suivi §4) qui permette à l'encadrant de skip des balises pour le compte d'un stagiaire.
 
-### Connexion 'singleton' d'un stagiaire à son profil
 
-Un stagiaire ne doit pouvoir se connecter à son profil uniquement si aucun autre appareil n'est déjà connecté à ce profil.
-Voir comment cela est possible... 
-
-### Saisie différée des codes (candidats sans téléphone)
-
-Certains candidats ne peuvent pas saisir leurs codes pendant l'épreuve (pas de téléphone, batterie morte, appareil non compatible…). Il faudrait un mécanisme leur permettant de renseigner leurs codes **après la course**.
-
-**Points à résoudre :**
-- Qui déclenche le mode "saisie différée" ? (encadrant à l'avance, ou automatique si aucun code saisi ?)
-- Formulaire de saisie groupée (tous les codes d'un coup) sans horodatage
-- Conséquences sur la validation des PH (temps non vérifiable automatiquement → l'encadrant doit statuer manuellement)
-- Impact sur les vues Espace Stagiaire, Suivi et Résultats
-
-### Barrières horaires — Pourcentages et colonne Diff
-
-À revalider :
-- La règle de calcul des pourcentages est-elle correcte ? (floor pour min, ceil pour max)
-- Faut-il afficher une colonne "Diff" dans le tableau des temps ajustés ?
-- Si oui : quelle valeur afficher ? (% réel calculé depuis les temps arrondis, différence en minutes, les deux ?)
-- Quel mode de calcul pour la diff ? (moyenne des 4 valeurs, max H seul, un par colonne ?)
 
 
 ## Réversibilité et mécanisme des balises sautées
