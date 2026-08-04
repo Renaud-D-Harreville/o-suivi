@@ -6,6 +6,7 @@ import type { BeaconInput } from "../../types/log";
 import { formatIsoToHms, hmsToIsoTimestamp, toLocalISO, formatTime } from "../../utils/date";
 import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../../utils/beacon-validation";
 import { apiFetch } from "../../utils/api";
+import { shortName } from "../../utils/format";
 import BeaconEditTable from "../../components/suivi/BeaconEditTable.vue";
 import AdminBackLink from "../../components/AdminBackLink.vue";
 
@@ -53,7 +54,7 @@ async function fetchData() {
     const comp = resultsData.competitors.find((c: any) => c.user_id === userId);
     if (!comp) return;
 
-    competitorName.value = `${comp.first_name} ${comp.last_name}`;
+    competitorName.value = shortName(comp.first_name, comp.last_name);
 
     const rawBeacons = comp.beacons as Array<{
       sequence: number;

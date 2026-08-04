@@ -1,3 +1,8 @@
+export function shortName(firstName: string, lastName: string): string {
+  const initial = lastName ? `${lastName.charAt(0).toUpperCase()}.` : "";
+  return initial ? `${firstName} ${initial}` : firstName;
+}
+
 export function formatDuration(seconds: number | null): string {
   if (seconds === null || seconds === undefined) return "-";
   const sign = seconds < 0 ? "-" : "";
@@ -43,4 +48,3 @@ export function beaconIcon(valid: boolean | null): string {
   if (valid === false) return "❌";
   return "-";
 }
-

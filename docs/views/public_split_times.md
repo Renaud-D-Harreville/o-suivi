@@ -78,7 +78,7 @@ Exemples :
 | Colonne | Contenu |
 |---------|---------|
 | **#** | Classement (rang) dans cette paire (1, 2, 3…) |
-| **Concurrent** | Prénom + Nom |
+| **Concurrent** | Prénom N. (initiale du nom + point) |
 | **Parcours** | Numéro du parcours |
 | **Split** | Temps intermédiaire au format **MM:SS** ou **H:MM:SS** si ≥ 1h |
 

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import type { SplitsResponse, CompetitorSummary, EventBeaconInfo } from "../../types/splits";
-import { formatDuration } from "../../utils/format";
+import { formatDuration, shortName } from "../../utils/format";
 import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const route = useRoute();
@@ -54,7 +54,7 @@ function pairTitle(fromId: number | null, toId: number): string {
 function competitorName(userId: string): string {
   const c = competitorMap.value.get(userId);
   if (!c) return "?";
-  return `${c.first_name} ${c.last_name}`;
+  return shortName(c.first_name, c.last_name);
 }
 
 function competitorCourse(userId: string): string {

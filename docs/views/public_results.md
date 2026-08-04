@@ -40,14 +40,15 @@ Liste triée par **ordre d'arrivée** (premiers arrivés en haut), DNS en fin de
 
 Un concurrent est considéré comme **arrivé** dès lors qu'il a franchi la dernière PH, ou qu'il est en **abandon** ou **DNS**.
 
-- Ligne unique : Prénom · Nom · **"Arrivé"** (homme) ou **"Arrivée"** (femme) — texte neutre, pas d'indicateur de validation
+- Ligne unique : Prénom N. (initiale du nom + point) · **"Arrivé"** (homme) ou **"Arrivée"** (femme) — texte neutre, pas d'indicateur de validation
 - Mêmes cas particuliers que [resultats.md](resultats.md) (DNS grisé/barré/non cliquable, Abandon badge affiché)
 
 > 💡 La vue publique ne montre **aucun indicateur de validation** (ni ✅ ni ❌) dans la liste. Le stagiaire doit ouvrir le détail pour voir ses résultats détaillés.
+> 💡 **Anonymisation** : toutes les vues publiques affichent "Prénom N." (première lettre du nom de famille + point) au lieu du nom complet.
 
 #### Concurrent non arrivé (encore en course)
 
-- Ligne unique : Prénom · Nom · ⏳ (sablier — pas encore arrivé)
+- Ligne unique : Prénom N. · ⏳ (sablier — pas encore arrivé)
 
 ---
 

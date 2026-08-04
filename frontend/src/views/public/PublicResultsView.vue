@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import type { PublicCompetitorResult, PublicResultsData } from "../../types/results";
-import { formatDuration, formatResultTime, formatDelay, sectionIcon, beaconIcon } from "../../utils/format";
+import { formatDuration, formatResultTime, formatDelay, sectionIcon, beaconIcon, shortName } from "../../utils/format";
 import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const route = useRoute();
@@ -102,7 +102,7 @@ function arrivalLabel(c: PublicCompetitorResult): string {
           >
             <!-- Line 1: Name + arrival status -->
             <div class="card-line1">
-              <span class="name">{{ comp.first_name }} {{ comp.last_name }}</span>
+              <span class="name">{{ shortName(comp.first_name, comp.last_name) }}</span>
               <span v-if="comp.abandoned" class="badge abandoned">ABANDON</span>
               <span v-if="comp.dns" class="badge dns-badge">DNS</span>
               <span class="arrival-label">{{ arrivalLabel(comp) }}</span>
