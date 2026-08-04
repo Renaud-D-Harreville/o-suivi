@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import type { PublicCompetitorResult, PublicResultsData } from "../../types/results";
 import { formatDuration, formatResultTime, formatDelay, globalIcon, sectionIcon, beaconIcon } from "../../utils/format";
+import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const route = useRoute();
 const eventId = route.params.id as string;
@@ -68,6 +69,7 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
 <template>
   <div class="public-results-view">
     <header class="public-header">
+      <AdminBackLink :to="`/admin/events/${eventId}/resultats`" />
       <h1>Résultats</h1>
     </header>
 
@@ -238,6 +240,7 @@ function sectionIconForVisibility(valid: boolean | null, visible: boolean): stri
   color: #fff;
   padding: 1rem;
   text-align: center;
+  position: relative;
 }
 
 .public-header h1 {

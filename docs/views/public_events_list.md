@@ -36,5 +36,6 @@ Permettre à quiconque (stagiaires, visiteurs) de trouver un événement et d'ac
 
 - Accessible depuis la page de login via un lien "Événements publics" en bas du formulaire
 - Depuis cette page, retour vers la page de login via un lien "Connexion encadrant"
+- **Lien conditionnel "← Vue encadrant"** : affiché uniquement si un token JWT valide (rôle `organizer`, non expiré) est présent en localStorage. Pointe vers `/admin`. Discret (petit lien en haut à droite).
 
 

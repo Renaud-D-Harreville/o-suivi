@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import type { SplitsResponse, CompetitorSummary, EventBeaconInfo } from "../../types/splits";
 import { formatDuration } from "../../utils/format";
+import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const route = useRoute();
 const eventId = route.params.id as string;
@@ -74,6 +75,7 @@ function computeRank(index: number, splits: { split_seconds: number }[]): number
 <template>
   <div class="split-times-view">
     <header class="public-header">
+      <AdminBackLink :to="`/admin/events/${eventId}/resultats`" />
       <router-link :to="`/events/${eventId}`" class="back-link">← Retour aux résultats</router-link>
       <h1>Comparaison des temps intermédiaires</h1>
       <p v-if="data" class="event-name">{{ data.event_name }}</p>
@@ -127,6 +129,7 @@ function computeRank(index: number, splits: { split_seconds: number }[]): number
   color: #fff;
   padding: 1rem;
   text-align: center;
+  position: relative;
 }
 
 .public-header h1 {

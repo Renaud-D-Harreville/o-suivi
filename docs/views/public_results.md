@@ -25,7 +25,7 @@ Permettre à quiconque disposant du lien de l'événement de consulter les résu
 ### 3.1 En-tête
 
 - **Nom de l'événement** affiché en haut de page
-- Pas de navigation admin (pas de Config/Départ/Suivi)
+- **Lien conditionnel "← Vue encadrant"** : affiché **uniquement** si un token JWT valide (rôle `organizer`, non expiré) est présent en localStorage. Pointe vers `/admin/events/{uuid}/resultats`. Discret (petit lien en haut à droite du header).
 - **Lien "⏱ Temps intermédiaires"** : lien vers la page de comparaison des splits (`/events/{uuid}/splits`). Toujours affiché. Voir [public_split_times.md](public_split_times.md)
 - **Lien Routechoices** : affiché **uniquement** si les **2 conditions** suivantes sont remplies :
   1. Le champ `public_routechoices_time` est **renseigné** dans la configuration de l'événement (non null)

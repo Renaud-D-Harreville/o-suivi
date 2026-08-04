@@ -7,6 +7,7 @@ import { formatIsoToHms, hmsToIsoTimestamp, toLocalISO, formatTime } from "../..
 import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../../utils/beacon-validation";
 import { apiFetch } from "../../utils/api";
 import BeaconEditTable from "../../components/suivi/BeaconEditTable.vue";
+import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -217,6 +218,7 @@ function goBack() {
 <template>
   <div class="public-beacon-edit-view">
     <header class="edit-header">
+      <AdminBackLink :to="`/admin/events/${eventId}/suivi`" />
       <button class="back-btn" @click="goBack">← Retour aux résultats</button>
       <h1>{{ competitorName }}</h1>
     </header>
@@ -257,6 +259,7 @@ function goBack() {
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
 }
 
 .back-btn {

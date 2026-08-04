@@ -56,6 +56,7 @@ L'horaire de passage utilisé est :
 | **Lien retour** | **"← Retour aux résultats"** — retour vers la vue résultats publique (`/events/{uuid}`) |
 | **Nom de l'événement** | Affiché en haut |
 | **Titre de la page** | **"Comparaison des temps intermédiaires"** |
+| **Lien conditionnel "← Vue encadrant"** | Affiché uniquement si token JWT organizer valide. Pointe vers `/admin/events/{uuid}/resultats` |
 
 ### 4.2 Corps — Un tableau par paire de balises
 

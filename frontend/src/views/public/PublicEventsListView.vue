@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import type { EventSummary } from "../../types/results";
+import AdminBackLink from "../../components/AdminBackLink.vue";
 
 const events = ref<EventSummary[]>([]);
 const loading = ref(true);
@@ -39,6 +40,9 @@ function formatDate(date: string | null): string {
 
 <template>
   <div class="public-events">
+    <div class="admin-link-wrapper">
+      <AdminBackLink to="/admin" />
+    </div>
     <h1>Événements publics</h1>
 
     <p v-if="loading" class="message">Chargement…</p>
@@ -65,6 +69,18 @@ function formatDate(date: string | null): string {
   max-width: 480px;
   margin: 4rem auto;
   padding: 2rem;
+  position: relative;
+}
+
+.admin-link-wrapper {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+}
+
+.admin-link-wrapper :deep(.admin-back-link) {
+  color: #1976d2;
+  position: static;
 }
 
 h1 {

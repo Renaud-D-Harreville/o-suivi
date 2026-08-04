@@ -29,6 +29,7 @@ Permettre l'édition des codes balises et horaires de passage d'un concurrent, v
 | **Lien retour** | **"Retour aux résultats"** — retour vers la vue résultats publique (`/events/{uuid}`) |
 | **Nom de l'événement** | Affiché en haut |
 | **Nom du concurrent** | Prénom + Nom du concurrent dont on édite les balises |
+| **Lien conditionnel "← Vue encadrant"** | Affiché uniquement si token JWT organizer valide. Pointe vers `/admin/events/{uuid}/suivi` |
 
 ### 3.2 Tableau des balises
 

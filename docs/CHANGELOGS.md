@@ -7,6 +7,7 @@
 ## 2026-08-04
 
 - **Fix : reconnexion automatique** : l'utilisateur déjà authentifié (token JWT valide en localStorage) est désormais redirigé automatiquement vers `/admin` quand il accède à `/` ou `/login`, au lieu de devoir re-saisir ses identifiants.
+- **Lien retour vue encadrant sur les vues publiques** : composant `AdminBackLink.vue` affiché conditionnellement (token organizer valide) en haut à droite des 4 vues publiques. Pointe vers la vue admin correspondante (`/admin`, `/admin/events/:id/resultats`, `/admin/events/:id/suivi`). Docs mises à jour.
 - **Vue publique comparaison splits** : nouvelle page `/events/{uuid}/splits` permettant de comparer les temps intermédiaires de tous les concurrents, balise par balise. Un tableau par paire de balises consécutives (ordonnées par numéro/tag), classement par split croissant. Backend : `SplitCalculator` (domain), `SplitService` (orchestration), endpoint `GET /api/public/events/{id}/splits`. Frontend : `PublicSplitTimesView.vue`, types `splits.ts`, route + lien depuis la vue résultats publique. 5 tests backend ajoutés. Docs : `public_split_times.md`, CDC §5.5, `public_results.md` mis à jour.
 
 ---
