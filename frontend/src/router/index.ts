@@ -17,7 +17,19 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      redirect: "/login",
+      name: "root",
+      redirect: () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            if (payload.exp && Date.now() < payload.exp * 1000 && payload.role === "organizer") {
+              return "/admin";
+            }
+          } catch { /* invalid token */ }
+        }
+        return "/login";
+      },
     },
     {
       path: "/login",
@@ -99,8 +111,12 @@ function getUserRole(): string | null {
 }
 
 router.beforeEach((to) => {
-  if (to.meta.requiresAuth && getUserRole() !== "organizer") {
+  const role = getUserRole();
+  if (to.meta.requiresAuth && role !== "organizer") {
     return { name: "login" };
+  }
+  if (to.name === "login" && role === "organizer") {
+    return { name: "admin-home" };
   }
 });
 
