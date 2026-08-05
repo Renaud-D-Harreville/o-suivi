@@ -47,6 +47,22 @@ class EventDetail(BaseModel):
     registrations: list[EventRegistration] = []
 
 
+class ScheduleEntry(BaseModel):
+    """One row of the public schedule view."""
+
+    first_name: str
+    last_name_initial: str
+    phone: str | None = None
+    start_time_planned: str | None = None
+
+
+class ScheduleResponse(BaseModel):
+    """Response for the public schedule endpoint."""
+
+    event_name: str
+    entries: list[ScheduleEntry]
+
+
 class EventUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1)
     date: str | None = None

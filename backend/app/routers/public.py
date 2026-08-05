@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.schemas.events import ScheduleResponse
 from app.schemas.logs import (
     CheckpointEditData,
     CheckpointEditLog,
@@ -13,6 +14,7 @@ from app.schemas.splits import SplitsResponse
 from app.services.checkpoint_service import CheckpointResponse, CheckpointService
 from app.services.log_service import LogService
 from app.services.results_service import ResultsService
+from app.services.schedule_service import ScheduleService
 from app.services.split_service import SplitService
 
 router = APIRouter(
@@ -26,6 +28,11 @@ PUBLIC_AUTHOR_ID = "public"
 @router.get("/resultats", response_model=ResultsResponse)
 async def get_public_results(event_id: str) -> ResultsResponse:
     return ResultsService().compute(event_id)
+
+
+@router.get("/schedule", response_model=ScheduleResponse)
+async def get_public_schedule(event_id: str) -> ScheduleResponse:
+    return ScheduleService().compute(event_id)
 
 
 @router.get("/splits", response_model=SplitsResponse)

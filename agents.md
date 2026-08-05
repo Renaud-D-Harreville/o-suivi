@@ -224,6 +224,7 @@ o-suivi/
 │       ├── resultats.md                       ← Results view spec
 │       ├── public_results.md                       ← Public results view spec (no auth)
 │       ├── public_split_times.md                   ← Public split times comparison view spec (no auth)
+│       ├── public_schedule.md                       ← Public schedule view spec (no auth)
 │       ├── public_beacon_edit.md                    ← Public beacon edit view spec (no auth)
 │       ├── public_events_list.md                    ← Public events list view spec (no auth)
 │       ├── templates/
@@ -268,6 +269,7 @@ o-suivi/
 │   │   │   ├── checkpoint_service.py  ← Récupération des checkpoints d'un concurrent
 │   │   │   ├── log_service.py         ← Création/append de logs (partagé admin + public)
 │   │   │   ├── split_service.py       ← Calcul des temps intermédiaires comparés (splits)
+│   │   │   ├── schedule_service.py    ← Construction de la réponse horaires publique
 │   │   │   └── registration_service.py ← Logique inscriptions (CRUD, déduplication, matching)
 │   │   ├── domain/
 │   │   │   ├── exceptions.py          ← Exceptions domaine (EntityNotFound)
@@ -286,7 +288,7 @@ o-suivi/
 │   │       ├── auth.py                ← TokenPayload / LoginRequest / LoginResponse
 │   │       ├── common.py             ← HealthResponse
 │   │       ├── templates.py           ← Beacon(is_ph) / Course / CourseDetail / Gate / CourseTimeGates / NameBody (=TemplateCreate=TemplateUpdate) / TemplateSummary / TemplateImportData
-│   │       ├── events.py             ← StartMode / EventRegistration / EventBeacon(Beacon) / EventCreate(=NameBody) / EventSummary / EventDetail / EventUpdate
+│   │       ├── events.py             ← StartMode / EventRegistration / EventBeacon(Beacon) / EventCreate(=NameBody) / EventSummary / EventDetail / EventUpdate / ScheduleEntry / ScheduleResponse
 │   │       ├── registrations.py      ← RegistrationCreate / RegistrationDetail / RegistrationUpdate
 │   │       ├── users.py              ← User
 │   │       ├── results.py            ← BeaconResult / SectionResult / CompetitorResult / ResultsResponse
@@ -383,6 +385,7 @@ o-suivi/
             │   ├── PublicResultsView.vue   ← Public results (no auth, masking non-arrived)
             │   ├── PublicBeaconEditView.vue ← Public beacon edit (no auth, PH 2-line, no valid column)
             │   ├── PublicSplitTimesView.vue ← Public split times comparison (no auth, one table per beacon pair)
+            │   ├── PublicScheduleView.vue  ← Public schedule (no auth, departure times table)
             │   └── PublicEventsListView.vue ← Public events list (no auth, sorted by date)
             └── admin/
                 ├── AdminHomeView.vue  ← Admin home (tabs: Templates + Events)

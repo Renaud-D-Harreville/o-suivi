@@ -27,6 +27,7 @@ Permettre à quiconque disposant du lien de l'événement de consulter les résu
 - **Nom de l'événement** affiché en haut de page
 - **Lien conditionnel "← Vue encadrant"** : affiché **uniquement** si un token JWT valide (rôle `organizer`, non expiré) est présent en localStorage. Pointe vers `/admin/events/{uuid}/resultats`. Discret (petit lien en haut à droite du header).
 - **Lien "⏱ Temps intermédiaires"** : lien vers la page de comparaison des splits (`/events/{uuid}/splits`). Toujours affiché. Voir [public_split_times.md](public_split_times.md)
+- **Lien "📅 Horaires"** : lien vers la page des horaires (`/events/{uuid}/schedule`). Toujours affiché. Voir [public_schedule.md](public_schedule.md)
 - **Lien Routechoices** : affiché **uniquement** si les **2 conditions** suivantes sont remplies :
   1. Le champ `public_routechoices_time` est **renseigné** dans la configuration de l'événement (non null)
   2. L'heure actuelle est **postérieure** à l'heure configurée (combinée avec la date de l'événement)

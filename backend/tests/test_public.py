@@ -406,3 +406,73 @@ def test_public_splits_excludes_dns() -> None:
     assert len(data["competitors"]) == 0
 
 
+# --- Public schedule ---
+
+
+def test_public_schedule_no_auth_required() -> None:
+    """Public schedule endpoint should be accessible without authentication."""
+    token = _get_token()
+    eid = _create_event(token)
+    resp = client.get(f"/api/public/events/{eid}/schedule")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["event_name"] == "Public Test"
+    assert data["entries"] == []
+
+
+def test_public_schedule_returns_entries_sorted_by_time() -> None:
+    """Schedule should return participants sorted by start_time_planned."""
+    token = _get_token()
+    eid = _create_event(token)
+
+    # Register two participants
+    uid1 = _register(token, eid, first="Alice", last="Bernard")
+    uid2 = _register(token, eid, first="Bob", last="Martin")
+
+    # Set start times (Bob earlier than Alice)
+    client.patch(
+        f"/api/events/{eid}/registrations/{uid1}",
+        json={"start_time_planned": "07:34"},
+        headers=_headers(token),
+    )
+    client.patch(
+        f"/api/events/{eid}/registrations/{uid2}",
+        json={"start_time_planned": "07:32"},
+        headers=_headers(token),
+    )
+
+    resp = client.get(f"/api/public/events/{eid}/schedule")
+    data = resp.json()
+    assert len(data["entries"]) == 2
+    # Bob first (07:32), then Alice (07:34)
+    assert data["entries"][0]["first_name"] == "Bob"
+    assert data["entries"][0]["start_time_planned"] == "07:32"
+    assert data["entries"][0]["last_name_initial"] == "M."
+    assert data["entries"][1]["first_name"] == "Alice"
+    assert data["entries"][1]["start_time_planned"] == "07:34"
+    assert data["entries"][1]["last_name_initial"] == "B."
+
+
+def test_public_schedule_null_time_last() -> None:
+    """Participants without start_time_planned should appear at the end."""
+    token = _get_token()
+    eid = _create_event(token)
+
+    uid1 = _register(token, eid, first="Alice", last="Bernard")
+    uid2 = _register(token, eid, first="Bob", last="Martin")
+
+    # Only Alice has a time
+    client.patch(
+        f"/api/events/{eid}/registrations/{uid1}",
+        json={"start_time_planned": "07:30"},
+        headers=_headers(token),
+    )
+
+    resp = client.get(f"/api/public/events/{eid}/schedule")
+    data = resp.json()
+    assert len(data["entries"]) == 2
+    assert data["entries"][0]["first_name"] == "Alice"
+    assert data["entries"][1]["first_name"] == "Bob"
+    assert data["entries"][1]["start_time_planned"] is None
+
+

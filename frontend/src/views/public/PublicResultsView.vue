@@ -78,6 +78,10 @@ function arrivalLabel(c: PublicCompetitorResult): string {
           <router-link :to="`/events/${eventId}/splits`">
             ⏱ Temps intermédiaires
           </router-link>
+          <span class="link-separator">·</span>
+          <router-link :to="`/events/${eventId}/schedule`">
+            📅 Horaires
+          </router-link>
         </div>
 
         <!-- Routechoices link -->
@@ -273,6 +277,11 @@ function arrivalLabel(c: PublicCompetitorResult): string {
   color: #2e7d32;
   text-decoration: none;
   font-weight: 500;
+}
+
+.link-separator {
+  margin: 0 0.5rem;
+  color: #999;
 }
 
 .competitor-list {

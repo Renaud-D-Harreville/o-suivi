@@ -149,6 +149,7 @@ Un **accès public** alternatif (sans authentification) est disponible via un li
 - Une **page de liste des événements** (`/events`) permet de consulter tous les événements disponibles, triés par date décroissante, et d'accéder aux résultats de chacun. Un lien vers cette page est présent sur la page de login.
 - Un lien partageable (`/events/{uuid}`) permet à quiconque de consulter les résultats provisoires de tous les concurrents et d'éditer les balises de chaque concurrent, sans authentification. Les modifications sont tracées avec `author_id = "public"`.
 - Une **page de comparaison des temps intermédiaires** (`/events/{uuid}/splits`) permet de comparer les splits de tous les concurrents, balise par balise, pour chaque paire de balises consécutives. Accessible sans authentification depuis la page des résultats.
+- Une **page des horaires** (`/events/{uuid}/schedule`) permet de consulter les horaires de départ prévus de tous les inscrits. Accessible sans authentification depuis la page des résultats publics.
 
 ---
 

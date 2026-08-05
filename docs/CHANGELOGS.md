@@ -4,6 +4,12 @@
 
 ---
 
+## 2026-08-05
+
+- **Vue publique horaires** : nouvelle page `/events/{uuid}/schedule` permettant de consulter les horaires de départ prévus des stagiaires (sans authentification). Colonnes : horaire (gris), Prénom N. (anonymisé), téléphone. Backend : `ScheduleService`, `ScheduleEntry`/`ScheduleResponse` schemas, endpoint `GET /api/public/events/{id}/schedule`. Frontend : `PublicScheduleView.vue`, route, lien "📅 Horaires" ajouté dans la vue résultats publique. 3 tests backend ajoutés. Docs : `public_schedule.md`, CDC §5.5, `public_results.md` mis à jour.
+
+---
+
 ## 2026-08-04
 
 - **Fix : reconnexion automatique** : l'utilisateur déjà authentifié (token JWT valide en localStorage) est désormais redirigé automatiquement vers `/admin` quand il accède à `/` ou `/login`, au lieu de devoir re-saisir ses identifiants.
