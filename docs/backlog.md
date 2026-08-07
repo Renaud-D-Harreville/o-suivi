@@ -158,4 +158,6 @@ Page de sélection du nom stagiaire (`/event/:id_event`). À spécifier : affich
 
 `espace_stagiaire.md` §5.6.3 mentionne des "consignes globales de sécurité" affichées au stagiaire, mais aucun champ correspondant n'existe dans la configuration de l'événement. Il faudra ajouter un champ texte libre (ou un lien vers un document) dans l'onglet Général de l'événement pour permettre aux encadrants de saisir ces consignes.
 
+### Suppression de la date dans les timestamps de passage
 
+Les `passage_time` des checkpoints et PH arrivals sont actuellement stockés en ISO complet (`YYYY-MM-DDTHH:MM:SS`), mais seule la composante horaire a du sens (les épreuves ne dépassent jamais 24h). La date est un artefact de `hmsToIsoTimestamp()` qui colle la date du jour de saisie. À terme : migrer les données vers un format `HH:MM:SS` pur et supprimer la date du stockage. Le backend ignore déjà la date pour les calculs (fix du 2026-08-07), donc la migration est sans impact fonctionnel.

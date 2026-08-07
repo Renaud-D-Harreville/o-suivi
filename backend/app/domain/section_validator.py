@@ -1,5 +1,5 @@
 from app.domain.competitor_state import CompetitorState
-from app.domain.time_utils import seconds_between
+from app.domain.time_utils import extract_time_part, seconds_between
 from app.schemas.results import BeaconResult, SectionResult
 from app.schemas.templates import Gate
 
@@ -88,7 +88,7 @@ class SectionValidator:
             cp = self._state.checkpoints.get(b.sequence)
             if cp:
                 if cp.passage_time:
-                    passage_times.append(cp.passage_time)
+                    passage_times.append(extract_time_part(cp.passage_time))
             elif b.sequence not in self._state.skipped:
                 return False  # Not reached and not skipped = invalid
         return passage_times == sorted(passage_times)

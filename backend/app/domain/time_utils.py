@@ -11,13 +11,38 @@ def parse_iso(timestamp: str) -> datetime | None:
         return None
 
 
+def time_of_day_seconds(timestamp: str) -> int | None:
+    """Extract the time-of-day component from an ISO timestamp as total seconds.
+
+    Ignores the date part entirely — only uses HH:MM:SS.
+    """
+    dt = parse_iso(timestamp)
+    if dt is None:
+        return None
+    return dt.hour * 3600 + dt.minute * 60 + dt.second
+
+
 def seconds_between(start: str | None, end: str | None) -> int | None:
-    """Return seconds between two ISO timestamps, or None if either is missing."""
+    """Return seconds between two timestamps using time-of-day only.
+
+    Ignores the date component to avoid mismatches when timestamps
+    were recorded on different days (e.g. manual edits after the event).
+    """
     if not start or not end:
         return None
-    dt_start = parse_iso(start)
-    dt_end = parse_iso(end)
-    if not dt_start or not dt_end:
+    start_secs = time_of_day_seconds(start)
+    end_secs = time_of_day_seconds(end)
+    if start_secs is None or end_secs is None:
         return None
-    return int((dt_end - dt_start).total_seconds())
+    return end_secs - start_secs
+
+
+def extract_time_part(timestamp: str | None) -> str:
+    """Extract the HH:MM:SS portion from an ISO timestamp for ordering purposes."""
+    if not timestamp:
+        return ""
+    dt = parse_iso(timestamp)
+    if dt is None:
+        return ""
+    return f"{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}"
 

@@ -4,6 +4,12 @@
 
 ---
 
+## 2026-08-07
+
+- **Fix : temps intermédiaires > 24h** : correction du calcul des splits et temps de section. `seconds_between()` n'utilise désormais que la composante horaire (HH:MM:SS) et ignore la date. Le problème venait de `hmsToIsoTimestamp()` (frontend) qui collait la date du jour de saisie sur un horaire, causant des écarts de plusieurs jours quand l'édition était faite après l'épreuve. Correction aussi de `_check_order()` dans `SectionValidator` pour comparer les temps sans la date. 21 tests unitaires ajoutés dans `test_time_utils.py`.
+
+---
+
 ## 2026-08-05
 
 - **Vue publique horaires** : nouvelle page `/events/{uuid}/schedule` permettant de consulter les horaires de départ prévus des stagiaires (sans authentification). Colonnes : horaire (gris), Prénom N. (anonymisé), téléphone. Backend : `ScheduleService`, `ScheduleEntry`/`ScheduleResponse` schemas, endpoint `GET /api/public/events/{id}/schedule`. Frontend : `PublicScheduleView.vue`, route, lien "📅 Horaires" ajouté dans la vue résultats publique. 3 tests backend ajoutés. Docs : `public_schedule.md`, CDC §5.5, `public_results.md` mis à jour.
