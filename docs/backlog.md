@@ -160,4 +160,4 @@ Page de sélection du nom stagiaire (`/event/:id_event`). À spécifier : affich
 
 ### Suppression de la date dans les timestamps de passage
 
-Les `passage_time` des checkpoints et PH arrivals sont actuellement stockés en ISO complet (`YYYY-MM-DDTHH:MM:SS`), mais seule la composante horaire a du sens (les épreuves ne dépassent jamais 24h). La date est un artefact de `hmsToIsoTimestamp()` qui colle la date du jour de saisie. À terme : migrer les données vers un format `HH:MM:SS` pur et supprimer la date du stockage. Le backend ignore déjà la date pour les calculs (fix du 2026-08-07), donc la migration est sans impact fonctionnel.
+- ✅ **Fait** (2026-08-07) : les `passage_time`, `departure_time` et `ph_arrivals` sont désormais en format `HH:MM:SS` pur. Le backend normalise via `to_hms()`, le frontend envoie/reçoit directement en HH:MM:SS.

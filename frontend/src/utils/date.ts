@@ -19,19 +19,6 @@ export function formatSecondsToHms(totalSeconds: number): string {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-export function hmsToIsoTimestamp(hms: string): string | null {
-  const match = hms.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-  if (!match) return null;
-  const now = new Date();
-  const date = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
-  return `${date}T${hms}`;
-}
-
-export function formatIsoToHms(isoTimestamp: string | null): string {
-  if (!isoTimestamp) return "";
-  return isoTimestamp.substring(11, 19);
-}
-
 export function formatMinutes(minutes: number | null): string {
   if (minutes === null) return "---";
   const h = Math.floor(minutes / 60);
@@ -39,4 +26,36 @@ export function formatMinutes(minutes: number | null): string {
   return `${h}h${m.toString().padStart(2, "0")}`;
 }
 
+/**
+ * Convert HH:MM:SS string to total seconds since midnight.
+ */
+function hmsToSeconds(hms: string): number | null {
+  const parts = hms.split(":");
+  if (parts.length < 2) return null;
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const s = parts.length > 2 ? parseInt(parts[2], 10) : 0;
+  if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
+  return h * 3600 + m * 60 + s;
+}
 
+/**
+ * Return seconds between two HH:MM:SS strings.
+ * Returns null if either input is missing or invalid.
+ */
+export function secondsBetween(start: string | null, end: string | null): number | null {
+  if (!start || !end) return null;
+  const startSecs = hmsToSeconds(start);
+  const endSecs = hmsToSeconds(end);
+  if (startSecs === null || endSecs === null) return null;
+  return endSecs - startSecs;
+}
+
+/**
+ * Extract HH:MM:SS from an ISO timestamp (backward compat for log metadata).
+ */
+export function isoToHms(iso: string): string {
+  if (!iso) return "";
+  if (iso.includes("T")) return iso.split("T")[1].substring(0, 8);
+  return iso.substring(0, 8);
+}

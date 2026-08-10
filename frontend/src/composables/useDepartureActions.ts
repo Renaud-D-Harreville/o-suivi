@@ -40,10 +40,7 @@ export function useDepartureActions(
     if (!timeValue) return;
     pending.value = true;
     try {
-      const today = new Date();
-      const [hours, minutes] = timeValue.split(":").map(Number);
-      today.setHours(hours, minutes, 0, 0);
-      const departure_time = toLocalISO(today);
+      const departure_time = timeValue.length === 5 ? timeValue + ":00" : timeValue;
       const creation_date = toLocalISO(new Date());
 
       const res = await apiFetch(

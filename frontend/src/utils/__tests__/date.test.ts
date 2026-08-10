@@ -3,9 +3,9 @@ import {
   toLocalISO,
   formatTime,
   formatSecondsToHms,
-  hmsToIsoTimestamp,
-  formatIsoToHms,
   formatMinutes,
+  secondsBetween,
+  isoToHms,
 } from "../date";
 
 describe("toLocalISO", () => {
@@ -47,32 +47,43 @@ describe("formatSecondsToHms", () => {
   });
 });
 
-describe("hmsToIsoTimestamp", () => {
-  it("returns null for invalid input", () => {
-    expect(hmsToIsoTimestamp("")).toBeNull();
-    expect(hmsToIsoTimestamp("12:30")).toBeNull();
-    expect(hmsToIsoTimestamp("abc")).toBeNull();
-    expect(hmsToIsoTimestamp("1:2:3")).toBeNull();
+describe("secondsBetween", () => {
+  it("returns difference in seconds for valid HH:MM:SS inputs", () => {
+    expect(secondsBetween("09:00:00", "10:30:00")).toBe(5400);
   });
 
-  it("converts valid HH:MM:SS to ISO timestamp with today's date", () => {
-    const result = hmsToIsoTimestamp("08:30:15");
-    expect(result).not.toBeNull();
-    expect(result!).toMatch(/^\d{4}-\d{2}-\d{2}T08:30:15$/);
+  it("returns negative for reversed times", () => {
+    expect(secondsBetween("10:00:00", "09:00:00")).toBe(-3600);
+  });
+
+  it("returns null for null start", () => {
+    expect(secondsBetween(null, "10:00:00")).toBeNull();
+  });
+
+  it("returns null for null end", () => {
+    expect(secondsBetween("09:00:00", null)).toBeNull();
+  });
+
+  it("returns null for empty strings", () => {
+    expect(secondsBetween("", "10:00:00")).toBeNull();
+  });
+
+  it("handles HH:MM without seconds", () => {
+    expect(secondsBetween("09:00", "10:00")).toBe(3600);
   });
 });
 
-describe("formatIsoToHms", () => {
-  it("returns empty string for null", () => {
-    expect(formatIsoToHms(null)).toBe("");
-  });
-
+describe("isoToHms", () => {
   it("extracts HH:MM:SS from ISO timestamp", () => {
-    expect(formatIsoToHms("2026-07-15T08:30:45")).toBe("08:30:45");
+    expect(isoToHms("2026-07-15T08:30:45")).toBe("08:30:45");
   });
 
-  it("handles timestamps without seconds part gracefully", () => {
-    expect(formatIsoToHms("2026-07-15T")).toBe("");
+  it("returns the value if already HH:MM:SS", () => {
+    expect(isoToHms("08:30:45")).toBe("08:30:45");
+  });
+
+  it("returns empty string for empty input", () => {
+    expect(isoToHms("")).toBe("");
   });
 });
 

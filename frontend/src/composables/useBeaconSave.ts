@@ -1,7 +1,7 @@
 import { type Ref } from "vue";
 import type { TrackingCompetitor } from "../types/competitor";
 import type { BeaconInput } from "../types/log";
-import { hmsToIsoTimestamp, toLocalISO, formatTime, formatIsoToHms } from "../utils/date";
+import { toLocalISO, formatTime } from "../utils/date";
 import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../utils/beacon-validation";
 import { computeCurrentPh } from "../utils/competitor-state";
 import { apiFetch } from "../utils/api";
@@ -24,7 +24,7 @@ export function useBeaconSave(
 
     const oldCode = (beacon.enteredCode || "").toUpperCase();
     const newTime = input.time.trim();
-    const oldTime = formatIsoToHms(beacon.passageTime);
+    const oldTime = beacon.passageTime || "";
 
     const codeChanged = hasCodeChanged(input.code, beacon.enteredCode || "");
     const timeChanged = hasTimeChanged(input.time, oldTime);
@@ -34,7 +34,7 @@ export function useBeaconSave(
     const codeToSend = codeChanged
       ? codeToPayload(input.code)
       : (oldCode.length === 2 ? oldCode : null);
-    const passage_time = hmsToIsoTimestamp(newTime) || null;
+    const passage_time = newTime || null;
     const creation_date = toLocalISO(new Date());
 
     const res = await apiFetch(
@@ -56,7 +56,7 @@ export function useBeaconSave(
 
       inputs[bIdx] = {
         code: beacon.enteredCode || "",
-        time: formatIsoToHms(beacon.passageTime),
+        time: beacon.passageTime || "",
       };
     }
   }
@@ -72,10 +72,10 @@ export function useBeaconSave(
     if (!arrivalInputs) return;
 
     const newTime = (arrivalInputs[beacon.sequence] || "").trim();
-    const oldTime = formatIsoToHms(beacon.phArrivalTime);
+    const oldTime = beacon.phArrivalTime || "";
     if (!hasTimeChanged(arrivalInputs[beacon.sequence] || "", oldTime)) return;
 
-    const passage_time = hmsToIsoTimestamp(newTime) || null;
+    const passage_time = newTime || null;
     const creation_date = toLocalISO(new Date());
 
     const res = await apiFetch(
@@ -88,7 +88,7 @@ export function useBeaconSave(
 
     if (res.ok) {
       beacon.phArrivalTime = passage_time;
-      arrivalInputs[beacon.sequence] = formatIsoToHms(beacon.phArrivalTime);
+      arrivalInputs[beacon.sequence] = beacon.phArrivalTime || "";
     }
   }
 

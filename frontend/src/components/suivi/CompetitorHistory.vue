@@ -20,7 +20,7 @@ function formatEntry(log: LogEntry): string {
     case "checkpoint_edit": {
       const code = log.data?.code ? `"${log.data.code}"` : "—";
       const time = log.data?.passage_time
-        ? (log.data.passage_time as string).substring(11, 19)
+        ? (log.data.passage_time as string)
         : "—";
       return `Balise ${log.data?.sequence} → ${code} | ${time}`;
     }

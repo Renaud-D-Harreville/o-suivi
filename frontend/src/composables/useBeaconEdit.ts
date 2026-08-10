@@ -1,7 +1,6 @@
 import { ref, reactive, type Ref } from "vue";
 import type { TrackingCompetitor } from "../types/competitor";
 import type { BeaconInput } from "../types/log";
-import { formatIsoToHms } from "../utils/date";
 import { hasCodeChanged, hasTimeChanged } from "../utils/beacon-validation";
 import { useBeaconSave } from "./useBeaconSave";
 
@@ -19,12 +18,12 @@ export function useBeaconEdit(
   function initInputs(comp: TrackingCompetitor): void {
     beaconInputs.value[comp.user_id] = comp.beacons.map((b) => ({
       code: b.enteredCode || "",
-      time: formatIsoToHms(b.passageTime),
+      time: b.passageTime || "",
     }));
     const arrivals: Record<number, string> = {};
     for (const b of comp.beacons) {
       if (b.is_ph) {
-        arrivals[b.sequence] = formatIsoToHms(b.phArrivalTime);
+        arrivals[b.sequence] = b.phArrivalTime || "";
       }
     }
     phArrivalInputs[comp.user_id] = arrivals;
@@ -39,14 +38,14 @@ export function useBeaconEdit(
 
     const newInputs = comp.beacons.map((b) => ({
       code: b.enteredCode || "",
-      time: formatIsoToHms(b.passageTime),
+      time: b.passageTime || "",
     }));
     beaconInputs.value[comp.user_id] = newInputs;
 
     const arrivals: Record<number, string> = {};
     for (const b of comp.beacons) {
       if (b.is_ph) {
-        arrivals[b.sequence] = formatIsoToHms(b.phArrivalTime);
+        arrivals[b.sequence] = b.phArrivalTime || "";
       }
     }
     phArrivalInputs[comp.user_id] = arrivals;
@@ -60,7 +59,7 @@ export function useBeaconEdit(
     if (inputs && inputs[bIdx]) {
       inputs[bIdx] = {
         code: beacon.enteredCode || "",
-        time: formatIsoToHms(beacon.passageTime),
+        time: beacon.passageTime || "",
       };
     }
   }
@@ -72,7 +71,7 @@ export function useBeaconEdit(
     if (!beacon.is_ph) return;
     const arrivalInputs = phArrivalInputs[userId];
     if (arrivalInputs) {
-      arrivalInputs[beacon.sequence] = formatIsoToHms(beacon.phArrivalTime);
+      arrivalInputs[beacon.sequence] = beacon.phArrivalTime || "";
     }
   }
 
@@ -96,8 +95,7 @@ export function useBeaconEdit(
 
     if (hasCodeChanged(input.code, beacon.enteredCode || "")) return true;
 
-    const oldTime = formatIsoToHms(beacon.passageTime);
-    return hasTimeChanged(input.time, oldTime);
+    return hasTimeChanged(input.time, beacon.passageTime || "");
   }
 
   async function saveRow(userId: string, bIdx: number): Promise<void> {
@@ -121,4 +119,3 @@ export function useBeaconEdit(
 
   return { beaconInputs, phArrivalInputs, savingRow, initInputs, syncInputs, getInputs, getPhArrivalInputs, hasChanged, saveRow, savePhArrival, fillCurrentTime, fillPhArrivalCurrentTime, resetRow, resetPhArrival };
 }
-

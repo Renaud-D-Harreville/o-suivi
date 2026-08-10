@@ -686,7 +686,7 @@ def test_ph_arrival_edit_updates_ph_arrivals_not_checkpoints() -> None:
         entry.apply_to(state)
 
     assert 5 in state.ph_arrivals
-    assert state.ph_arrivals[5] == "2026-09-15T08:25:00Z"
+    assert state.ph_arrivals[5] == "08:25:00"
     # Must NOT be in checkpoints
     assert 5 not in state.checkpoints
 

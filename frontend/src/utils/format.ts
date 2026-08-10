@@ -16,11 +16,12 @@ export function formatDuration(seconds: number | null): string {
   return `${sign}${m}′${String(s).padStart(2, "0")}″`;
 }
 
-export function formatResultTime(isoString: string | null): string {
-  if (!isoString) return "-";
-  const d = new Date(isoString);
-  if (isNaN(d.getTime())) return "-";
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+export function formatResultTime(timeString: string | null): string {
+  if (!timeString) return "-";
+  // Already HH:MM:SS — return HH:MM
+  if (!timeString.includes("T")) return timeString.substring(0, 5);
+  // ISO fallback — extract HH:MM
+  return timeString.substring(11, 16);
 }
 
 export function formatDelay(minutes: number | null): string {

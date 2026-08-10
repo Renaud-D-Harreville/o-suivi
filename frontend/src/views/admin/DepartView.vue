@@ -112,7 +112,7 @@ onMounted(loadData);
           <button class="depart-btn" @click="da.confirmDeparture(comp.user_id)">DÉPART</button>
         </div>
         <div v-else-if="comp.departed" class="comp-action">
-          <span class="departed-label">Parti à {{ comp.departure_time?.substring(11, 16) || "—" }}</span>
+          <span class="departed-label">Parti à {{ comp.departure_time?.substring(0, 5) || "—" }}</span>
         </div>
 
         <!-- Expandable panel -->
@@ -141,8 +141,8 @@ onMounted(loadData);
           <div class="field-row">
             <span class="field-label">Départ réel :</span>
             <template v-if="!isEditing(comp.user_id, 'actual_departure')">
-              <span class="field-value">{{ comp.departure_time ? comp.departure_time.substring(11, 16) : "—" }}</span>
-              <button class="edit-btn" @click="startEdit(comp.user_id, 'actual_departure', comp.departure_time ? comp.departure_time.substring(11, 16) : comp.start_time_planned)">✏️</button>
+              <span class="field-value">{{ comp.departure_time ? comp.departure_time.substring(0, 5) : "—" }}</span>
+              <button class="edit-btn" @click="startEdit(comp.user_id, 'actual_departure', comp.departure_time ? comp.departure_time.substring(0, 5) : comp.start_time_planned)">✏️</button>
             </template>
             <template v-else>
               <input v-model="editValue" type="time" class="edit-input" />

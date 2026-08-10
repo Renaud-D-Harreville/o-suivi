@@ -1,6 +1,7 @@
 import type { Course } from "../types/event";
 import type { CompetitorBeacon, CheckpointState } from "../types/competitor";
 import type { LogEntry } from "../types/log";
+import { isoToHms } from "./date";
 
 export function buildCompetitorBeacons(
   courseNumber: number | null,
@@ -86,7 +87,7 @@ export function reconstructTrackingState(
     switch (log.log_type) {
       case "departure":
         departed = true;
-        departureTime = log.metadata.creation_date;
+        departureTime = isoToHms(log.metadata.creation_date);
         break;
       case "departure_cancel":
         departed = false;

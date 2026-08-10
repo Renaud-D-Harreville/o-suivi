@@ -39,8 +39,12 @@ describe("formatResultTime", () => {
     expect(formatResultTime(null)).toBe("-");
   });
 
-  it("returns - for invalid date", () => {
-    expect(formatResultTime("not-a-date")).toBe("-");
+  it("returns HH:MM from HH:MM:SS input", () => {
+    expect(formatResultTime("09:30:15")).toBe("09:30");
+  });
+
+  it("returns HH:MM from ISO input (backward compat)", () => {
+    expect(formatResultTime("2026-08-05T09:30:15")).toBe("09:30");
   });
 });
 

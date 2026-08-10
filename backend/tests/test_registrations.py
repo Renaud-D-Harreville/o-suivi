@@ -362,7 +362,7 @@ def test_get_checkpoints_after_edit() -> None:
     assert len(data) == 1
     assert data[0]["sequence"] == 3
     assert data[0]["code"] == "AB"
-    assert data[0]["passage_time"] == "2026-09-15T12:49:00"
+    assert data[0]["passage_time"] == "12:49:00"
 
 
 def test_get_checkpoints_edit_overwrites_previous() -> None:
@@ -391,5 +391,5 @@ def test_get_checkpoints_edit_overwrites_previous() -> None:
     data = response.json()
     assert len(data) == 1
     # The second edit (12:49) should win, even though its passage_time is earlier
-    assert data[0]["passage_time"] == "2026-09-15T12:49:00"
+    assert data[0]["passage_time"] == "12:49:00"
 

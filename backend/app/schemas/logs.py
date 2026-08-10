@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from app.domain.time_utils import to_hms
+
 if TYPE_CHECKING:
     from app.domain.competitor_state import CompetitorState
 
@@ -88,7 +90,7 @@ class DepartureLog(BaseLogEntry):
 
     def apply_to(self, state: CompetitorState) -> None:
         state.departed = True
-        state.departure_time = self.metadata.creation_date
+        state.departure_time = to_hms(self.metadata.creation_date)
 
 
 class DepartureCancelLog(BaseLogEntry):
@@ -105,7 +107,7 @@ class DepartureEditLog(BaseLogEntry):
 
     def apply_to(self, state: CompetitorState) -> None:
         state.departed = True
-        state.departure_time = self.data.departure_time
+        state.departure_time = to_hms(self.data.departure_time)
 
 
 class DnsLog(BaseLogEntry):
@@ -176,7 +178,7 @@ class CheckpointLog(BaseLogEntry):
         state.checkpoints[self.data.sequence] = CheckpointEntry(
             sequence=self.data.sequence,
             code=self.data.code,
-            passage_time=self.metadata.creation_date,
+            passage_time=to_hms(self.metadata.creation_date),
         )
 
 
@@ -190,7 +192,7 @@ class CheckpointEditLog(BaseLogEntry):
         state.checkpoints[self.data.sequence] = CheckpointEntry(
             sequence=self.data.sequence,
             code=self.data.code,
-            passage_time=self.data.passage_time,
+            passage_time=to_hms(self.data.passage_time),
         )
 
 
@@ -199,7 +201,7 @@ class PhArrivalLog(BaseLogEntry):
     data: PhArrivalData
 
     def apply_to(self, state: CompetitorState) -> None:
-        state.ph_arrivals[self.data.sequence] = self.metadata.creation_date
+        state.ph_arrivals[self.data.sequence] = to_hms(self.metadata.creation_date)
 
 
 class PhArrivalEditLog(BaseLogEntry):
@@ -207,7 +209,7 @@ class PhArrivalEditLog(BaseLogEntry):
     data: PhArrivalEditData
 
     def apply_to(self, state: CompetitorState) -> None:
-        state.ph_arrivals[self.data.sequence] = self.data.passage_time
+        state.ph_arrivals[self.data.sequence] = to_hms(self.data.passage_time)
 
 
 class SkipLog(BaseLogEntry):

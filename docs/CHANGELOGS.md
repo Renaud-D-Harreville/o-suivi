@@ -6,6 +6,7 @@
 
 ## 2026-08-07
 
+- **Normalisation horaires en HH:MM:SS** : suppression de la date dans tous les champs d'horaire de course (`departure_time`, `passage_time`, `ph_arrivals`). Backend : les `apply_to()` des 6 types de logs passent par `to_hms()` pour extraire HH:MM:SS de n'importe quel format (ISO ou déjà HH:MM:SS). Frontend : suppression de `hmsToIsoTimestamp()` et `formatIsoToHms()`, les composables envoient/reçoivent directement du HH:MM:SS. `useTimeGates` utilise le nouveau `secondsBetween()` frontend (arithmétique pure sur strings). `formatResultTime()` retourne directement le HH:MM. Tests mis à jour (166 backend, 100 frontend).
 - **Fix : temps intermédiaires > 24h** : correction du calcul des splits et temps de section. `seconds_between()` n'utilise désormais que la composante horaire (HH:MM:SS) et ignore la date. Le problème venait de `hmsToIsoTimestamp()` (frontend) qui collait la date du jour de saisie sur un horaire, causant des écarts de plusieurs jours quand l'édition était faite après l'épreuve. Correction aussi de `_check_order()` dans `SectionValidator` pour comparer les temps sans la date. 21 tests unitaires ajoutés dans `test_time_utils.py`.
 
 ---

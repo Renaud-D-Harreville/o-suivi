@@ -1,48 +1,56 @@
-from datetime import datetime
+def to_hms(timestamp: str | None) -> str | None:
+    """Normalize any time representation to HH:MM:SS.
 
-
-def parse_iso(timestamp: str) -> datetime | None:
-    """Parse an ISO 8601 timestamp string into a datetime."""
+    Accepts:
+      - ISO format: "2026-08-05T09:30:00" → "09:30:00"
+      - Already HH:MM:SS: "09:30:00" → "09:30:00"
+      - HH:MM (no seconds): "09:30" → "09:30:00"
+      - None or empty → None
+    """
     if not timestamp:
         return None
+    # ISO format: contains 'T', extract the time part
+    if "T" in timestamp:
+        time_part = timestamp.split("T")[1]
+        # Strip timezone info if present
+        for sep in ("+", "Z"):
+            if sep in time_part:
+                time_part = time_part.split(sep)[0]
+        return time_part[:8]
+    # Already HH:MM:SS or HH:MM
+    if len(timestamp) == 5:
+        return timestamp + ":00"
+    return timestamp[:8]
+
+
+def _hms_to_seconds(hms: str) -> int | None:
+    """Convert HH:MM:SS string to total seconds since midnight."""
     try:
-        return datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    except (ValueError, TypeError):
+        parts = hms.split(":")
+        if len(parts) < 2:
+            return None
+        h = int(parts[0])
+        m = int(parts[1])
+        s = int(parts[2]) if len(parts) > 2 else 0
+        return h * 3600 + m * 60 + s
+    except (ValueError, IndexError):
         return None
-
-
-def time_of_day_seconds(timestamp: str) -> int | None:
-    """Extract the time-of-day component from an ISO timestamp as total seconds.
-
-    Ignores the date part entirely — only uses HH:MM:SS.
-    """
-    dt = parse_iso(timestamp)
-    if dt is None:
-        return None
-    return dt.hour * 3600 + dt.minute * 60 + dt.second
 
 
 def seconds_between(start: str | None, end: str | None) -> int | None:
-    """Return seconds between two timestamps using time-of-day only.
+    """Return seconds between two time strings (HH:MM:SS or ISO).
 
-    Ignores the date component to avoid mismatches when timestamps
-    were recorded on different days (e.g. manual edits after the event).
+    Both inputs are normalized to HH:MM:SS before computation.
+    Returns None if either input is missing or unparseable.
     """
-    if not start or not end:
+    start_hms = to_hms(start)
+    end_hms = to_hms(end)
+    if not start_hms or not end_hms:
         return None
-    start_secs = time_of_day_seconds(start)
-    end_secs = time_of_day_seconds(end)
+    start_secs = _hms_to_seconds(start_hms)
+    end_secs = _hms_to_seconds(end_hms)
     if start_secs is None or end_secs is None:
         return None
     return end_secs - start_secs
 
-
-def extract_time_part(timestamp: str | None) -> str:
-    """Extract the HH:MM:SS portion from an ISO timestamp for ordering purposes."""
-    if not timestamp:
-        return ""
-    dt = parse_iso(timestamp)
-    if dt is None:
-        return ""
-    return f"{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}"
 

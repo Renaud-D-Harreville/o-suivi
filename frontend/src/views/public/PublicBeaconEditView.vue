@@ -3,7 +3,7 @@ import { ref, reactive, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { CompetitorBeacon } from "../../types/competitor";
 import type { BeaconInput } from "../../types/log";
-import { formatIsoToHms, hmsToIsoTimestamp, toLocalISO, formatTime } from "../../utils/date";
+import { toLocalISO, formatTime } from "../../utils/date";
 import { hasCodeChanged, hasTimeChanged, codeToPayload } from "../../utils/beacon-validation";
 import { apiFetch } from "../../utils/api";
 import { shortName } from "../../utils/format";
@@ -92,11 +92,11 @@ async function fetchData() {
 
       builtInputs.push({
         code: enteredCode || "",
-        time: formatIsoToHms(passageTime),
+        time: passageTime || "",
       });
 
       if (b.is_ph) {
-        phArrivalInputs[b.sequence] = formatIsoToHms(phArrivalTime);
+        phArrivalInputs[b.sequence] = phArrivalTime || "";
       }
     }
 
@@ -119,7 +119,7 @@ async function handleSave(bIdx: number): Promise<void> {
   if (!beacon || !input) return;
 
   const oldCode = beacon.enteredCode || "";
-  const oldTime = formatIsoToHms(beacon.passageTime);
+  const oldTime = beacon.passageTime || "";
   const codeChanged = hasCodeChanged(input.code, oldCode);
   const timeChanged = hasTimeChanged(input.time, oldTime);
   if (!codeChanged && !timeChanged) return;
@@ -127,7 +127,7 @@ async function handleSave(bIdx: number): Promise<void> {
   savingBIdx.value = bIdx;
   try {
     const codeToSend = codeChanged ? codeToPayload(input.code) : (oldCode.length === 2 ? oldCode.toUpperCase() : null);
-    const passage_time = hmsToIsoTimestamp(input.time.trim()) || null;
+    const passage_time = input.time.trim() || null;
     const creation_date = toLocalISO(new Date());
 
     const res = await apiFetch(
@@ -143,7 +143,7 @@ async function handleSave(bIdx: number): Promise<void> {
       beacon.passageTime = passage_time;
       inputs.value[bIdx] = {
         code: beacon.enteredCode || "",
-        time: formatIsoToHms(beacon.passageTime),
+        time: beacon.passageTime || "",
       };
     }
   } finally {
@@ -155,13 +155,13 @@ async function handleSavePhArrival(bIdx: number): Promise<void> {
   const beacon = beacons.value[bIdx];
   if (!beacon || !beacon.is_ph) return;
 
-  const oldTime = formatIsoToHms(beacon.phArrivalTime);
+  const oldTime = beacon.phArrivalTime || "";
   if (!hasTimeChanged(phArrivalInputs[beacon.sequence] || "", oldTime)) return;
 
   savingBIdx.value = bIdx;
   try {
     const newTime = (phArrivalInputs[beacon.sequence] || "").trim();
-    const passage_time = hmsToIsoTimestamp(newTime) || null;
+    const passage_time = newTime || null;
     const creation_date = toLocalISO(new Date());
 
     const res = await apiFetch(
@@ -174,7 +174,7 @@ async function handleSavePhArrival(bIdx: number): Promise<void> {
 
     if (res.ok) {
       beacon.phArrivalTime = passage_time;
-      phArrivalInputs[beacon.sequence] = formatIsoToHms(beacon.phArrivalTime);
+      phArrivalInputs[beacon.sequence] = beacon.phArrivalTime || "";
     }
   } finally {
     savingBIdx.value = null;
@@ -200,14 +200,14 @@ function handleCancel(bIdx: number): void {
   if (!beacon) return;
   inputs.value[bIdx] = {
     code: beacon.enteredCode || "",
-    time: formatIsoToHms(beacon.passageTime),
+    time: beacon.passageTime || "",
   };
 }
 
 function handleCancelPhArrival(bIdx: number): void {
   const beacon = beacons.value[bIdx];
   if (beacon?.is_ph) {
-    phArrivalInputs[beacon.sequence] = formatIsoToHms(beacon.phArrivalTime);
+    phArrivalInputs[beacon.sequence] = beacon.phArrivalTime || "";
   }
 }
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CompetitorBeacon } from "../../types/competitor";
 import type { BeaconInput } from "../../types/log";
-import { formatIsoToHms } from "../../utils/date";
 import { hasCodeChanged, hasTimeChanged } from "../../utils/beacon-validation";
 
 const props = withDefaults(defineProps<{
@@ -46,7 +45,7 @@ function hasChanged(bIdx: number): boolean {
 
   if (hasCodeChanged(input.code, beacon.enteredCode || "")) return true;
 
-  const oldTime = formatIsoToHms(beacon.passageTime);
+  const oldTime = beacon.passageTime || "";
   return hasTimeChanged(input.time, oldTime);
 }
 
@@ -54,7 +53,7 @@ function hasPhArrivalChanged(bIdx: number): boolean {
   const beacon = props.beacons[bIdx];
   if (!beacon.is_ph || !props.phArrivalInputs) return false;
   const currentInput = props.phArrivalInputs[beacon.sequence] ?? "";
-  const originalTime = formatIsoToHms(beacon.phArrivalTime);
+  const originalTime = beacon.phArrivalTime || "";
   return currentInput.trim() !== originalTime;
 }
 </script>
@@ -152,7 +151,7 @@ function hasPhArrivalChanged(bIdx: number): boolean {
                 @click.stop
                 @keydown.enter="emit('save', bIdx)"
               />
-              <span v-else>{{ formatIsoToHms(beacon.passageTime) }}</span>
+              <span v-else>{{ beacon.passageTime || "" }}</span>
             </td>
             <td>
               <button

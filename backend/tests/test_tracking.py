@@ -107,7 +107,7 @@ def test_tracking_departed_competitor() -> None:
     resp = client.get(f"/api/events/{eid}/tracking", headers=_headers(token))
     comp = resp.json()["competitors"][0]
     assert comp["departed"] is True
-    assert comp["departure_time"] == "2026-09-15T07:00:00"
+    assert comp["departure_time"] == "07:00:00"
 
 
 def test_tracking_dns_competitor() -> None:

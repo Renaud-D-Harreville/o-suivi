@@ -1,7 +1,7 @@
 import type { Ref } from "vue";
 import type { TimeGates, TimeGateEntry } from "../types/event";
 import type { TrackingCompetitor } from "../types/competitor";
-import { formatSecondsToHms } from "../utils/date";
+import { formatSecondsToHms, formatTime, secondsBetween } from "../utils/date";
 
 export function useTimeGates(
   allTimeGates: Ref<TimeGates[]>,
@@ -21,24 +21,25 @@ export function useTimeGates(
 
     const phBeacons = comp.beacons.filter((b) => b.is_ph);
 
-    let sectionStart: Date;
+    let sectionStart: string;
     if (gateIndex === 0) {
-      sectionStart = new Date(comp.departure_time);
+      sectionStart = comp.departure_time;
     } else {
       const prevPhBeacon = phBeacons[gateIndex - 1];
       if (!prevPhBeacon?.passageTime) return null;
-      sectionStart = new Date(prevPhBeacon.passageTime);
+      sectionStart = prevPhBeacon.passageTime;
     }
 
     const currentPhBeacon = phBeacons[gateIndex];
     if (currentPhBeacon?.passageTime) {
-      const end = new Date(currentPhBeacon.passageTime);
-      return Math.round((end.getTime() - sectionStart.getTime()) / 60000);
+      const secs = secondsBetween(sectionStart, currentPhBeacon.passageTime);
+      return secs !== null ? Math.round(secs / 60) : null;
     }
 
     const currentPhLabel = `PH${gateIndex + 1}`;
     if (comp.current_ph === currentPhLabel) {
-      return Math.round((currentTime.value.getTime() - sectionStart.getTime()) / 60000);
+      const secs = secondsBetween(sectionStart, formatTime(currentTime.value));
+      return secs !== null ? Math.round(secs / 60) : null;
     }
 
     return null;
@@ -86,19 +87,19 @@ export function useTimeGates(
     if (comp.current_ph === "Arrivé") return "";
 
     const phBeacons = comp.beacons.filter((b) => b.is_ph);
-    let lastTime = new Date(comp.departure_time);
+    let lastTime = comp.departure_time;
 
     for (const phBeacon of phBeacons) {
       if (phBeacon.passageTime) {
-        lastTime = new Date(phBeacon.passageTime);
+        lastTime = phBeacon.passageTime;
       } else {
         break;
       }
     }
 
-    const elapsedMs = currentTime.value.getTime() - lastTime.getTime();
-    if (elapsedMs < 0) return "00:00:00";
-    return formatSecondsToHms(Math.floor(elapsedMs / 1000));
+    const secs = secondsBetween(lastTime, formatTime(currentTime.value));
+    if (secs === null || secs < 0) return "00:00:00";
+    return formatSecondsToHms(secs);
   }
 
   function getRowClass(comp: TrackingCompetitor): string {
