@@ -9,6 +9,7 @@ class RegistrationCreate(BaseModel):
     sex: Literal["H", "F"]
     phone: str = ""
     routechoices_id: str | None = None
+    routechoices_short_name: str | None = None
 
 
 class RegistrationDetail(BaseModel):
@@ -18,6 +19,7 @@ class RegistrationDetail(BaseModel):
     sex: str
     phone: str
     routechoices_id: str | None = None
+    routechoices_short_name: str | None = None
     course_number: int | None = None
     start_order: int | None = None
     start_time_planned: str | None = None

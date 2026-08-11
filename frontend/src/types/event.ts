@@ -4,6 +4,7 @@ export interface Beacon {
   tag: string;
   is_ph: boolean;
   code: string | null;
+  coordinates?: string | null;
 }
 
 export interface Course {

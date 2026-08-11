@@ -116,6 +116,7 @@ class TemplateRepository:
                         "number": beacon_map[bid]["number"],
                         "tag": beacon_map[bid]["tag"],
                         "is_ph": beacon_map[bid].get("is_ph", False),
+                        "coordinates": beacon_map[bid].get("coordinates"),
                     }
                     for bid in course.get("beacons", [])
                     if bid in beacon_map

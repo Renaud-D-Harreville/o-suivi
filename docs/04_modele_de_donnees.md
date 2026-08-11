@@ -83,10 +83,10 @@ data/
   "id": "uuid",
   "name": "Chartreuse 2026",
   "beacons": [
-    { "id": 31, "number": 1, "tag": "unique", "is_ph": false },
-    { "id": 32, "number": 2, "tag": "NO", "is_ph": false },
-    { "id": 33, "number": 2, "tag": "SE", "is_ph": false },
-    { "id": 34, "number": 3, "tag": "unique", "is_ph": true }
+    { "id": 31, "number": 1, "tag": "unique", "is_ph": false, "coordinates": "45.883424, 5.863804" },
+    { "id": 32, "number": 2, "tag": "NO", "is_ph": false, "coordinates": null },
+    { "id": 33, "number": 2, "tag": "SE", "is_ph": false, "coordinates": null },
+    { "id": 34, "number": 3, "tag": "unique", "is_ph": true, "coordinates": "45.892112, 5.871256" }
   ],
   "courses": [
     {
@@ -120,13 +120,15 @@ data/
   "template_id": "uuid",
   "first_start_time": "07:30",
   "routechoices_url": "https://www.routechoices.com/event/...",
+  "routechoices_event_id": "AAXESzM45fQ",
   "public_routechoices_time": "14:00",
+  "gps_polling_enabled": false,
   "start_mode": { "group_size": 1, "interval_seconds": 120 },
   "beacons": [
-    { "id": 31, "number": 1, "tag": "unique", "is_ph": false, "code": "AB" },
-    { "id": 32, "number": 2, "tag": "NO", "is_ph": false, "code": "CD" },
-    { "id": 33, "number": 2, "tag": "SE", "is_ph": false, "code": "EF" },
-    { "id": 34, "number": 3, "tag": "unique", "is_ph": true, "code": "GH" }
+    { "id": 31, "number": 1, "tag": "unique", "is_ph": false, "code": "AB", "coordinates": "45.883424, 5.863804" },
+    { "id": 32, "number": 2, "tag": "NO", "is_ph": false, "code": "CD", "coordinates": null },
+    { "id": 33, "number": 2, "tag": "SE", "is_ph": false, "code": "EF", "coordinates": null },
+    { "id": 34, "number": 3, "tag": "unique", "is_ph": true, "code": "GH", "coordinates": "45.892112, 5.871256" }
   ],
   "courses": [
     {
@@ -150,7 +152,8 @@ data/
       "course_number": 1,
       "start_order": 1,
       "start_time_planned": "07:30",
-      "tracker_number": "12"
+      "tracker_number": "12",
+      "routechoices_short_name": "renaud"
     }
   ]
 }
@@ -159,6 +162,8 @@ data/
 > 💡 `beacons`, `courses` et `time_gates` sont **copiés** depuis le template à la création de l'événement, puis indépendants.
 
 > 💡 Chaque balise possède un **`id`** unique (entier auto-incrémenté à partir de 31, pour éviter la confusion avec les numéros de balises qui vont de 1 à ~20). Les parcours (`courses[].beacons`) référencent les balises par cet `id` au lieu de dupliquer les champs `number` et `tag`. Les endpoints GET de l'API enrichissent les références pour restituer les informations complètes de chaque balise (number, tag, is_ph).
+
+> 💡 `routechoices_event_id` est optionnel. S'il est absent et que `routechoices_url` est renseigné, le backend peut résoudre automatiquement l'identifiant Routechoices puis le persister dans `event.json` pour les appels suivants.
 
 ---
 
@@ -261,9 +266,9 @@ Exemple complet :
 | `departure_cancel` | encadrant | — | Annulation du départ |
 | `departure_edit` | encadrant | `{ departure_time }` | Correction de l'heure de départ |
 | `checkpoint` | stagiaire ou encadrant | `{ sequence, code }` | Code balise saisi (heure de passage = `metadata.creation_date`) |
-| `checkpoint_edit` | encadrant ou public | `{ sequence, code?, passage_time?, comment? }` | Correction d'un checkpoint (`passage_time` = horaire de passage corrigé, distinct de `metadata.creation_date`) |
+| `checkpoint_edit` | encadrant, public ou **gps** | `{ sequence, code?, passage_time?, comment? }` | Correction d'un checkpoint (`passage_time` = horaire de passage corrigé, distinct de `metadata.creation_date`) |
 | `ph_arrival` | stagiaire ou encadrant | `{ sequence }` | Arrivée à la PH (étape 1) |
-| `ph_arrival_edit` | encadrant ou public | `{ sequence, passage_time }` | Correction de l'heure d'arrivée à une PH |
+| `ph_arrival_edit` | encadrant, public ou **gps** | `{ sequence, passage_time }` | Correction de l'heure d'arrivée à une PH |
 | `skip` | stagiaire ou encadrant | `{ checkpoint }` | Saut d'une balise |
 | `skip_cancel` | stagiaire ou encadrant | `{ checkpoint }` | Annulation d'un saut |
 | `abandon` | encadrant | `{ comment }` | Marqué comme abandon |

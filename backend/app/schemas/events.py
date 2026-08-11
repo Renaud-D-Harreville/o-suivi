@@ -14,6 +14,7 @@ class EventRegistration(BaseModel):
     start_order: int | None = None
     start_time_planned: str | None = None
     tracker_number: str | None = None
+    routechoices_short_name: str | None = None
 
 
 class EventBeacon(Beacon):
@@ -39,7 +40,9 @@ class EventDetail(BaseModel):
     template_id: str | None = None
     first_start_time: str | None = None
     routechoices_url: str | None = None
+    routechoices_event_id: str | None = None
     public_routechoices_time: str | None = None
+    gps_polling_enabled: bool = False
     start_mode: StartMode | None = None
     beacons: list[EventBeacon] = []
     courses: list[CourseDetail] = []
@@ -69,7 +72,9 @@ class EventUpdate(BaseModel):
     template_id: str | None = None
     first_start_time: str | None = None
     routechoices_url: str | None = None
+    routechoices_event_id: str | None = None
     public_routechoices_time: str | None = None
+    gps_polling_enabled: bool | None = None
     start_mode: StartMode | None = None
     beacons: list[EventBeacon] | None = None
     courses: list[Course] | None = None

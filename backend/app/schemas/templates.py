@@ -7,6 +7,7 @@ class Beacon(BaseModel):
     tag: str
     is_ph: bool = False
     code: str | None = None
+    coordinates: str | None = None
 
 
 class Course(BaseModel):

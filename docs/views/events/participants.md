@@ -24,18 +24,19 @@ Tableau entièrement modifiable, une ligne par participant :
 | **Sexe** | dropdown | `H` / `F` | ✅ |
 | **Téléphone** | texte | Numéro de téléphone | ✅ |
 | **ID Routechoices** | texte | Identifiant Routechoices (clé de déduplication prioritaire) | ❌ |
+| **RC Short Name** | texte | Short name utilisé sur Routechoices pour cet événement. Sert de clé de matching pour le polling GPS automatique | ❌ |
 
 ### 2.2 Wireframe
 
 ```
-┌───────────┬──────────┬──────┬────────────────┬─────────────────┬──────┐
-│ Nom       │ Prénom   │ Sexe │ Téléphone      │ ID Routechoices │      │
-├───────────┼──────────┼──────┼────────────────┼─────────────────┼──────┤
-│ Dupont    │ Marie    │  F   │ 06 12 34 56 78 │ rc_12345        │ [✗] │
-│ Martin    │ Pierre   │  H   │ 06 98 76 54 32 │                 │ [✗] │
-│ Leroy     │ Julie    │  F   │ 06 11 22 33 44 │ rc_67890        │ [✗] │
-│ Bernard   │ Thomas   │  H   │ 06 55 66 77 88 │                 │ [✗] │
-└───────────┴──────────┴──────┴────────────────┴─────────────────┴──────┘
+┌───────────┬──────────┬──────┬────────────────┬─────────────────┬──────────────┬──────┐
+│ Nom       │ Prénom   │ Sexe │ Téléphone      │ ID Routechoices │ RC Short Name│      │
+├───────────┼──────────┼──────┼────────────────┼─────────────────┼──────────────┼──────┤
+│ Dupont    │ Marie    │  F   │ 06 12 34 56 78 │ rc_12345        │ marie        │ [✗] │
+│ Martin    │ Pierre   │  H   │ 06 98 76 54 32 │                 │ pierre       │ [✗] │
+│ Leroy     │ Julie    │  F   │ 06 11 22 33 44 │ rc_67890        │ julie        │ [✗] │
+│ Bernard   │ Thomas   │  H   │ 06 55 66 77 88 │                 │              │ [✗] │
+└───────────┴──────────┴──────┴────────────────┴─────────────────┴──────────────┴──────┘
 
 [ + Ajouter un participant ]  [ Importer CSV ]       [ Enregistrer ]
 ```

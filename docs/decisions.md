@@ -18,6 +18,18 @@
 
 ## Decisions
 
+### 2026-08-11 — GPS polling automatique avec matching par routechoices_short_name
+
+**Decision**: Implement automatic GPS polling: a background asyncio task runs every 60s, fetches Routechoices GPS data for events with `gps_polling_enabled = true`, decodes PositionArchive encoded_data, matches RC competitors to O-Suivi registrations by `short_name` ↔ `routechoices_short_name` (case-insensitive), detects beacon proximity (Haversine, 25m radius), and writes `checkpoint_edit`/`ph_arrival_edit` logs with `author_id = "gps"`. For PH beacons: entry = `ph_arrival_edit` (first point ≤ 25m), exit = `checkpoint_edit` (first point > 25m after entry). GPS also writes the beacon code if assigned. No overwrite if a passage_time already exists.
+**Reason**: The Routechoices public API (`/events/{id}/data/`) does not expose `device_id` (Tracker ID), which would have allowed reliable matching via `routechoices_id`. The `short_name` field is the best available matching key from the public API. A new `routechoices_short_name` field on `EventRegistration` allows the organizer to set the matching value per participant per event.
+**Impact**: `event.json` (new `gps_polling_enabled` field), `EventRegistration` (new `routechoices_short_name` field), new GPS polling service + domain classes (decoder, haversine, matcher), `03_specifications_techniques.md`, `04_modele_de_donnees.md`, `views/events/general.md` (toggle button), `views/events/participants.md` (new column).
+
+### 2026-08-11 — Routechoices minimal GPS integration (one-shot)
+
+**Decision**: Keep v1 simple but add a minimal backend integration for Routechoices GPS data: store `routechoices_event_id` on the event, resolve it automatically from `routechoices_url` when missing, and expose a one-shot admin endpoint `GET /api/events/{id}/routechoices/gps` returning raw Routechoices payload. No polling yet.
+**Reason**: Avoid re-entering/re-resolving the external event id, unlock immediate GPS data retrieval, and keep complexity low before implementing periodic polling.
+**Impact**: `04_modele_de_donnees.md` (new event field), backend event schema/repository, new Routechoices service + admin endpoint, tests.
+
 ### 2026-07-23 — Code language is English
 
 **Decision**: All code (variables, functions, classes, comments, commits) is in English. Documentation stays in French.  

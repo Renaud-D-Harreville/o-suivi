@@ -4,6 +4,12 @@
 
 ---
 
+## 2026-08-11
+
+- **Coordonnees de balises (templates + evenements)** : ajout d'un champ libre optionnel `coordinates` sur les balises (backend schemas + persistance JSON), ajout de la colonne editable "Coordonnees" dans les onglets Balises template/evenement, et propagation dans les balises enrichies des parcours. Tests backend templates/evenements mis a jour (45 passes) et tests frontend executes (100 passes).
+- **Routechoices (integration minimale backend)** : ajout du champ evenement `routechoices_event_id` (persistance JSON + API), resolution automatique de l'ID depuis `routechoices_url` si absent, et nouvel endpoint admin `GET /api/events/{id}/routechoices/gps` retournant un payload brut Routechoices (avec recuperation via `data_url` quand disponible). Tests ajoutes sur service + endpoint (32 passes cibles).
+---
+
 ## 2026-08-07
 
 - **Normalisation horaires en HH:MM:SS** : suppression de la date dans tous les champs d'horaire de course (`departure_time`, `passage_time`, `ph_arrivals`). Backend : les `apply_to()` des 6 types de logs passent par `to_hms()` pour extraire HH:MM:SS de n'importe quel format (ISO ou déjà HH:MM:SS). Frontend : suppression de `hmsToIsoTimestamp()` et `formatIsoToHms()`, les composables envoient/reçoivent directement du HH:MM:SS. `useTimeGates` utilise le nouveau `secondsBetween()` frontend (arithmétique pure sur strings). `formatResultTime()` retourne directement le HH:MM. Tests mis à jour (166 backend, 100 frontend).

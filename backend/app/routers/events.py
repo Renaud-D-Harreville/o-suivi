@@ -6,7 +6,13 @@ from app.dependencies import require_organizer
 from app.repositories.event_repository import EventRepository
 from app.repositories.template_repository import TemplateRepository
 from app.schemas.events import EventCreate, EventDetail, EventSummary, EventUpdate
+from app.schemas.routechoices import RoutechoicesGpsRawResponse
 from app.schemas.tracking import TrackingResponse
+from app.services.routechoices_service import (
+    RoutechoicesResolutionError,
+    RoutechoicesService,
+    RoutechoicesUpstreamError,
+)
 from app.services.tracking_service import TrackingService
 
 router = APIRouter(
@@ -53,4 +59,25 @@ async def import_template(event_id: str) -> EventDetail:
 @router.get("/{event_id}/tracking", response_model=TrackingResponse, dependencies=_auth)
 async def get_tracking(event_id: str) -> TrackingResponse:
     return TrackingService().get_tracking(event_id)
+
+
+@router.get("/{event_id}/routechoices/gps", response_model=RoutechoicesGpsRawResponse, dependencies=_auth)
+async def get_routechoices_gps(event_id: str) -> RoutechoicesGpsRawResponse:
+    event_repo = _events()
+    event = event_repo.load(event_id)
+    service = RoutechoicesService()
+
+    try:
+        routechoices_event_id = service.resolve_event_id(event)
+        payload = service.fetch_event_payload(routechoices_event_id)
+    except RoutechoicesResolutionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RoutechoicesUpstreamError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    if not event.routechoices_event_id:
+        event_repo.set_routechoices_event_id(event_id, routechoices_event_id)
+
+    return RoutechoicesGpsRawResponse(routechoices_event_id=routechoices_event_id, payload=payload)
+
 

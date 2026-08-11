@@ -2,6 +2,8 @@ from fastapi.testclient import TestClient
 
 from app.config import DATA_DIR
 from app.main import app
+from app.schemas.routechoices import RoutechoicesCompetitorRaw, RoutechoicesEventDataRaw
+from app.services.routechoices_service import RoutechoicesService
 
 client = TestClient(app)
 
@@ -183,6 +185,81 @@ def test_update_event_persists() -> None:
     assert data["routechoices_url"] == "https://example.com"
 
 
+def test_update_event_persists_routechoices_event_id() -> None:
+    token = _get_token()
+    event_id = _create_event(token)
+    client.patch(
+        f"/api/events/{event_id}",
+        json={"routechoices_event_id": "AAXESzM45fQ"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    response = client.get(
+        f"/api/events/{event_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    assert response.json()["routechoices_event_id"] == "AAXESzM45fQ"
+
+
+def test_routechoices_gps_persists_resolved_event_id(monkeypatch) -> None:
+    token = _get_token()
+    event_id = _create_event(token)
+    client.patch(
+        f"/api/events/{event_id}",
+        json={"routechoices_url": "https://arvik.routechoices.com/API-test/"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    monkeypatch.setattr(RoutechoicesService, "resolve_event_id", lambda _self, _event: "AAXESzM45fQ")
+    monkeypatch.setattr(
+        RoutechoicesService,
+        "fetch_event_payload",
+        lambda _self, _eid: RoutechoicesEventDataRaw(
+            competitors=[RoutechoicesCompetitorRaw(id="comp_1", encoded_data="abc")],
+            next=None,
+        ),
+    )
+
+    response = client.get(
+        f"/api/events/{event_id}/routechoices/gps",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    assert response.json()["routechoices_event_id"] == "AAXESzM45fQ"
+    assert response.json()["payload"]["competitors"][0]["id"] == "comp_1"
+
+    updated = client.get(f"/api/events/{event_id}", headers={"Authorization": f"Bearer {token}"})
+    assert updated.status_code == 200
+    assert updated.json()["routechoices_event_id"] == "AAXESzM45fQ"
+
+
+def test_routechoices_gps_uses_existing_event_id(monkeypatch) -> None:
+    token = _get_token()
+    event_id = _create_event(token)
+    client.patch(
+        f"/api/events/{event_id}",
+        json={"routechoices_event_id": "KNOWN123"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    monkeypatch.setattr(
+        RoutechoicesService,
+        "fetch_event_payload",
+        lambda _self, _eid: RoutechoicesEventDataRaw(
+            competitors=[RoutechoicesCompetitorRaw(id=_eid, encoded_data="abc")],
+            next=None,
+        ),
+    )
+
+    response = client.get(
+        f"/api/events/{event_id}/routechoices/gps",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    assert response.json()["routechoices_event_id"] == "KNOWN123"
+    assert response.json()["payload"]["competitors"][0]["id"] == "KNOWN123"
+
+
 def test_get_event_requires_auth() -> None:
     response = client.get("/api/events/some-id")
     assert response.status_code == 401
@@ -197,7 +274,7 @@ def test_update_event_beacons() -> None:
     token = _get_token()
     event_id = _create_event(token)
     beacons = [
-        {"id": 31, "number": 1, "tag": "unique", "is_ph": False, "code": "AB"},
+        {"id": 31, "number": 1, "tag": "unique", "is_ph": False, "code": "AB", "coordinates": "45.883424, 5.863804"},
         {"id": 32, "number": 2, "tag": "NO", "is_ph": False, "code": "CD"},
         {"id": 33, "number": 3, "tag": "unique", "is_ph": True, "code": "EF"},
     ]
@@ -211,6 +288,8 @@ def test_update_event_beacons() -> None:
     assert len(data["beacons"]) == 3
     assert data["beacons"][0]["code"] == "AB"
     assert data["beacons"][0]["id"] == 31
+    assert data["beacons"][0]["coordinates"] == "45.883424, 5.863804"
+    assert data["beacons"][1]["coordinates"] is None
     assert data["beacons"][2]["is_ph"] is True
 
 
@@ -277,7 +356,7 @@ def _create_template_with_data(token: str) -> str:
     client.put(
         f"/api/templates/{tid}/beacons",
         json=[
-            {"id": 31, "number": 1, "tag": "unique", "is_ph": False},
+            {"id": 31, "number": 1, "tag": "unique", "is_ph": False, "coordinates": "45.883424, 5.863804"},
             {"id": 32, "number": 2, "tag": "NO", "is_ph": False},
             {"id": 33, "number": 3, "tag": "unique", "is_ph": True},
         ],
@@ -323,6 +402,7 @@ def test_import_template_success() -> None:
     assert data["beacons"][0]["code"] == ""
     assert data["beacons"][0]["tag"] == "unique"
     assert data["beacons"][0]["id"] == 31
+    assert data["beacons"][0]["coordinates"] == "45.883424, 5.863804"
     assert len(data["courses"]) == 1
     assert len(data["time_gates"]) == 1
     # Courses are enriched

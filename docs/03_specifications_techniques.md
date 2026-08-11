@@ -324,9 +324,74 @@ backend/
 | PATCH | `/api/events/{id}` | Modifier un événement (merge partiel) |
 | POST | `/api/events/{id}/import-template` | Importer beacons, courses et time_gates depuis le template sélectionné |
 | GET | `/api/events/{id}/tracking` | Données de suivi agrégées (état complet de tous les concurrents pour les vues Départ et Suivi) |
+| GET | `/api/events/{id}/routechoices/gps` | Récupération ponctuelle des données GPS Routechoices (payload brut) |
 | GET | `/api/events/{id}/resultats` | Résultats provisoires (tous les concurrents) |
 
 > 💡 **Enrichissement des parcours** : même principe que pour les templates — les endpoints GET retournent les `courses[].beacons` enrichis, les endpoints PATCH acceptent des listes d'`id`.
+
+> 💡 Le champ `routechoices_event_id` (optionnel) est stocké dans `event.json` pour éviter de re-résoudre l'identifiant externe à chaque appel.
+
+#### Routechoices — Polling GPS automatique
+
+##### Vue d'ensemble
+
+- **Objectif** : détecter automatiquement les passages des concurrents aux balises via les données GPS Routechoices
+- **Mécanisme** : tâche `asyncio` en arrière-plan, lancée au démarrage de l'app FastAPI
+- **Fréquence** : un cycle toutes les 60 secondes
+- **Périmètre** : tous les événements ayant `gps_polling_enabled = true`
+- **Endpoint existant conservé** : `GET /api/events/{id}/routechoices/gps` (récupération ponctuelle, payload brut)
+
+##### Activation
+
+- Champ `gps_polling_enabled` (booléen) dans `event.json`, modifiable via `PATCH /api/events/{id}`
+- Bouton toggle dans l'onglet Général de l'événement (frontend)
+- Le polling ne démarre que si `routechoices_event_id` ou `routechoices_url` est renseigné
+
+##### Algorithme d'un cycle de polling
+
+1. **Charger** tous les événements avec `gps_polling_enabled = true`
+2. **Pour chaque événement** :
+   a. Fetch les données GPS depuis Routechoices (`/events/{rc_event_id}/data/`)
+   b. Décoder le `encoded_data` de chaque concurrent (format PositionArchive → points `(timestamp_ms, lat, lon)`)
+   c. **Matching** : pour chaque concurrent Routechoices, chercher un inscrit O-Suivi dont `routechoices_short_name` correspond au `short_name` Routechoices (comparaison case-insensitive). Si aucun match → ignorer
+   d. **Pour chaque concurrent matché** :
+      - Trouver son parcours (via `course_number`) → liste ordonnée des balises avec coordonnées
+      - Reconstruire son état (`CompetitorState.from_logs`) → identifier les checkpoints déjà remplis
+      - Filtrer les balises candidates : celles avec `coordinates` non-null ET sans `passage_time` existant
+      - Filtrer les points GPS : uniquement ceux après le `departure_time` du concurrent
+      - **Balises normales** : premier point GPS ≤ 25m → écrire `checkpoint_edit` (code + passage_time)
+      - **Balises PH** : premier point GPS ≤ 25m → écrire `ph_arrival_edit` (entrée). Premier point GPS > 25m après l'entrée → écrire `checkpoint_edit` (sortie, code + passage_time)
+   e. Après chaque log écrit → broadcast WebSocket refresh
+
+##### Décodage PositionArchive (`encoded_data`)
+
+Format propriétaire Routechoices. Algorithme :
+- Base : varint encoding (chars - 63), avec accumulateurs `[timestamp, lat_acc, lon_acc]`
+- Initialisation : `YEAR2010 = 1262304000`, `vals = [YEAR2010, 0, 0]`
+- Chaque triplet de valeurs produit un point `(timestamp_ms = vals[0] * 1000, lat = vals[1] / 1e5, lon = vals[2] / 1e5)`
+- Première valeur timestamp : signed varint, suivantes : unsigned varint
+- Valeurs lat/lon : toujours signed varint
+
+##### Matching concurrents
+
+- Clé de matching : `RoutechoicesCompetitorRaw.short_name` ↔ `EventRegistration.routechoices_short_name`
+- Comparaison **case-insensitive**
+- Le champ `routechoices_short_name` est renseigné par l'organisateur dans l'onglet Participants
+- Limitation connue : l'API publique Routechoices n'expose pas le `device_id` (Tracker ID), ce qui empêche un matching fiable par identifiant unique. Le `short_name` est un palliatif
+
+##### Détection de proximité
+
+- Formule : **Haversine** (distance en mètres entre deux coordonnées GPS)
+- Rayon de détection : **25 mètres**
+- Pour chaque balise candidate, les points GPS sont parcourus dans l'**ordre chronologique**
+- La **première** coordonnée qui entre dans le rayon est utilisée
+
+##### Logs écrits par le GPS
+
+- `author_id = "gps"` (distinct de `"public"` et des UUID encadrants)
+- `checkpoint_edit` : avec `sequence`, `code` (si la balise a un code assigné), `passage_time` (timestamp GPS converti en HH:MM:SS)
+- `ph_arrival_edit` : avec `sequence`, `passage_time` (timestamp GPS converti en HH:MM:SS)
+- **Pas de réécriture** : si un `passage_time` existe déjà pour une séquence, le GPS ne l'écrase pas
 
 #### Inscriptions (admin)
 

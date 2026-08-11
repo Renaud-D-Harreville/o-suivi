@@ -88,13 +88,18 @@ class RegistrationService:
                 # Preserve existing registration fields
                 old_reg = next((r for r in old_registrations if r.user_id == matched_user.id), None)
                 reg = old_reg if old_reg else EventRegistration(user_id=matched_user.id)
+                # Update routechoices_short_name from entry
+                reg = reg.model_copy(update={"routechoices_short_name": entry.routechoices_short_name or None})
                 new_registrations.append(reg)
                 result.append(self._to_detail(updated, reg))
             else:
                 # Create new user
                 user = self._create_user(entry)
                 all_users.append(user)
-                reg = EventRegistration(user_id=user.id)
+                reg = EventRegistration(
+                    user_id=user.id,
+                    routechoices_short_name=entry.routechoices_short_name or None,
+                )
                 new_registrations.append(reg)
                 result.append(self._to_detail(user, reg))
 
@@ -168,6 +173,7 @@ class RegistrationService:
             sex=user.sex or "H",
             phone=user.phone,
             routechoices_id=user.routechoices_id,
+            routechoices_short_name=reg.routechoices_short_name,
             course_number=reg.course_number,
             start_order=reg.start_order,
             start_time_planned=reg.start_time_planned,

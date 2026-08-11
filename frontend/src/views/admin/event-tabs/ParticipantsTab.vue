@@ -8,6 +8,7 @@ interface Participant {
   sex: string;
   phone: string;
   routechoices_id: string;
+  routechoices_short_name: string;
 }
 
 const props = defineProps<{ eventId: string }>();
@@ -35,6 +36,7 @@ async function fetchParticipants() {
       sex: p.sex,
       phone: p.phone,
       routechoices_id: p.routechoices_id || "",
+      routechoices_short_name: p.routechoices_short_name || "",
     }));
   } catch {
     error.value = "Impossible de contacter le serveur";
@@ -42,7 +44,7 @@ async function fetchParticipants() {
 }
 
 function addParticipant() {
-  participants.value.push({ first_name: "", last_name: "", sex: "H", phone: "", routechoices_id: "" });
+  participants.value.push({ first_name: "", last_name: "", sex: "H", phone: "", routechoices_id: "", routechoices_short_name: "" });
 }
 
 function removeParticipant(index: number) {
@@ -83,6 +85,7 @@ const COLUMN_MAP: Record<string, keyof Participant> = {
   sexe: "sex",
   telephone: "phone",
   "id routechoices": "routechoices_id",
+  "rc short name": "routechoices_short_name",
 };
 
 function parseCsvAndMerge(text: string) {
@@ -132,6 +135,9 @@ function parseCsvAndMerge(text: string) {
       sex: cols[columnIndices.sex!]?.trim().toUpperCase() || "H",
       phone: cols[columnIndices.phone!]?.trim() || "",
       routechoices_id: cols[columnIndices.routechoices_id!]?.trim() || "",
+      routechoices_short_name: columnIndices.routechoices_short_name !== undefined
+        ? cols[columnIndices.routechoices_short_name]?.trim() || ""
+        : "",
     };
     // Skip rows without name
     if (entry.first_name && entry.last_name) {
@@ -211,6 +217,7 @@ async function handleSave() {
       sex: p.sex,
       phone: p.phone,
       routechoices_id: p.routechoices_id || "",
+      routechoices_short_name: p.routechoices_short_name || "",
     }));
     success.value = "Enregistré";
     setTimeout(() => (success.value = ""), 2000);
@@ -234,6 +241,7 @@ onMounted(fetchParticipants);
           <th>Sexe</th>
           <th>Téléphone</th>
           <th>ID Routechoices</th>
+          <th>RC Short Name</th>
           <th></th>
         </tr>
       </thead>
@@ -256,6 +264,9 @@ onMounted(fetchParticipants);
           </td>
           <td>
             <input v-model="p.routechoices_id" type="text" placeholder="rc_..." class="input-cell" />
+          </td>
+          <td>
+            <input v-model="p.routechoices_short_name" type="text" placeholder="short name" class="input-cell" />
           </td>
           <td>
             <button

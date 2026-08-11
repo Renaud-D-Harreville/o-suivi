@@ -32,6 +32,8 @@ class EventRepository:
             "template_id": None,
             "first_start_time": None,
             "routechoices_url": None,
+            "routechoices_event_id": None,
+            "gps_polling_enabled": False,
             "start_mode": None,
             "beacons": [],
             "courses": [],
@@ -94,6 +96,14 @@ class EventRepository:
         data["registrations"] = [r.model_dump() for r in registrations]
         self._write_raw(event_id, data)
 
+    def set_routechoices_event_id(self, event_id: str, routechoices_event_id: str) -> EventDetail:
+        """Persist Routechoices event id and return enriched event detail."""
+        data = self._read_raw(event_id)
+        data["routechoices_event_id"] = routechoices_event_id
+        self._write_raw(event_id, data)
+        data["courses"] = self._enrich_courses(data.get("beacons", []), data.get("courses", []))
+        return EventDetail(**data)
+
     def _read_raw(self, event_id: str) -> dict:
         """Read raw event JSON. Internal only."""
         event_file = self._event_file(event_id)
@@ -125,6 +135,7 @@ class EventRepository:
                         "tag": beacon_map[bid]["tag"],
                         "is_ph": beacon_map[bid].get("is_ph", False),
                         "code": beacon_map[bid].get("code", ""),
+                        "coordinates": beacon_map[bid].get("coordinates"),
                     }
                     for bid in c.get("beacons", [])
                     if bid in beacon_map

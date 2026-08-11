@@ -31,6 +31,7 @@ Tout en haut de l'onglet, un lien cliquable vers la page publique de l'événeme
 | **Heure du premier départ** | heure (HH:MM) | Heure à laquelle le premier concurrent part | ✅ |
 | **Lien Routechoices** | URL | Lien vers l'événement Routechoices (traces GPS) | ❌ |
 | **Heure d'affichage Routechoices (public)** | heure (HH:MM) + bouton ⏱ | Heure à partir de laquelle le lien Routechoices est visible sur la page publique des résultats. Bouton ⏱ pour remplir avec l'heure actuelle. Si non renseigné, le lien n'est jamais affiché publiquement | ❌ |
+| **Polling GPS** | toggle (on/off) | Active/désactive le polling GPS automatique. Nécessite un lien Routechoices renseigné. Quand activé, le backend vérifie toutes les 60s les données GPS pour détecter les passages aux balises | ❌ |
 
 ### 2.3 Wireframe
 
@@ -44,6 +45,7 @@ Tout en haut de l'onglet, un lien cliquable vers la page publique de l'événeme
 │  Premier départ :   [ 07:30                   ] │
 │  Lien Routechoices: [ https://...             ] │
 │  Routechoices public : [ 14:00         ] [⏱]   │
+│  Polling GPS :      [🔘 Activé / Désactivé]     │
 │                                                 │
 │  [ Initialiser depuis le template ]             │
 │                                                 │

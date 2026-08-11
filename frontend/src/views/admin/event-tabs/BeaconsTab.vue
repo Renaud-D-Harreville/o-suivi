@@ -12,6 +12,7 @@ interface Beacon {
   tag: string;
   is_ph: boolean;
   code: string;
+  coordinates: string;
 }
 
 const props = defineProps<{ eventId: string }>();
@@ -38,8 +39,13 @@ async function fetchEvent() {
     }
     const data = await response.json();
     beacons.value = data.beacons.length
-      ? data.beacons.map((b: any) => ({ ...b, is_ph: b.is_ph ?? false, code: b.code ?? "" }))
-      : [{ id: MIN_BEACON_ID, number: 1, tag: "unique", is_ph: false, code: "" }];
+      ? data.beacons.map((b: any) => ({
+          ...b,
+          is_ph: b.is_ph ?? false,
+          code: b.code ?? "",
+          coordinates: b.coordinates ?? "",
+        }))
+      : [{ id: MIN_BEACON_ID, number: 1, tag: "unique", is_ph: false, code: "", coordinates: "" }];
   } catch {
     error.value = "Impossible de contacter le serveur";
   }
@@ -50,7 +56,14 @@ function addBeacon() {
     beacons.value.length > 0
       ? Math.max(...beacons.value.map((b) => b.number ?? 0))
       : 0;
-  beacons.value.push({ id: nextBeaconId(), number: lastNumber + 1, tag: "unique", is_ph: false, code: "" });
+  beacons.value.push({
+    id: nextBeaconId(),
+    number: lastNumber + 1,
+    tag: "unique",
+    is_ph: false,
+    code: "",
+    coordinates: "",
+  });
 }
 
 function removeBeacon(index: number) {
@@ -117,6 +130,7 @@ onMounted(fetchEvent);
           <th>Tag</th>
           <th>PH</th>
           <th>Code</th>
+          <th>Coordonnees</th>
           <th></th>
         </tr>
       </thead>
@@ -154,6 +168,14 @@ onMounted(fetchEvent);
               :class="{ 'code-error': isCodeDuplicate(beacon.code) }"
               placeholder="AB"
               @input="formatCode(beacon)"
+            />
+          </td>
+          <td>
+            <input
+              v-model="beacon.coordinates"
+              type="text"
+              class="input-coordinates"
+              placeholder="45.883424, 5.863804"
             />
           </td>
           <td>
@@ -228,6 +250,14 @@ td {
   text-transform: uppercase;
   text-align: center;
   font-weight: 600;
+}
+
+.input-coordinates {
+  width: 200px;
+  padding: 0.375rem;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .code-error {

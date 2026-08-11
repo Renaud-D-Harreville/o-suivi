@@ -23,6 +23,7 @@ Tableau entièrement modifiable, une ligne par balise :
 | **ID** | int | Identifiant technique unique (≥ 31), auto-attribué par le frontend. Non modifiable | Auto |
 | **Tag** | dropdown | `unique` / `N` / `E` / `S` / `O` / `NO` / `NE` / `SE` / `SO` | ✅ |
 | **PH** | checkbox | Coché si la balise est une porte horaire | ✅ |
+| **Coordonnées** | texte | Latitude, longitude (ex: "45.883424, 5.863804") | ❌ |
 | **Section** | auto | Déduite des PH : les balises entre deux PH appartiennent à la même section. Le numéro de section est calculé dynamiquement selon l'ordre des balises PH dans chaque parcours | Auto |
 
 > 💡 La dernière balise PH = arrivée. Le nombre de PH est variable selon les besoins de l'organisateur.
@@ -32,22 +33,22 @@ Tableau entièrement modifiable, une ligne par balise :
 ### 2.2 Wireframe
 
 ```
-┌─────┬─────┬──────────┬──────┬───────────┐
-│ N°  │ ID  │   Tag    │  PH  │  Section  │
-├─────┼─────┼──────────┼──────┼───────────┤
-│  1  │ 31  │ unique   │  ☐   │ Section 1 │
-│  2  │ 32  │ NO       │  ☐   │ Section 1 │
-│  2  │ 33  │ SE       │  ☐   │ Section 1 │
-│  3  │ 34  │ unique   │  ☑   │ Section 1 │  ← Fin section 1 (= PH1)
-│  4  │ 35  │ N        │  ☐   │ Section 2 │
-│  4  │ 36  │ S        │  ☐   │ Section 2 │
-│  5  │ 37  │ unique   │  ☐   │ Section 2 │
-│  6  │ 38  │ unique   │  ☑   │ Section 2 │  ← Fin section 2 (= PH2)
-│ ... │ ... │ ...      │ ...  │ ...       │
-│ 18  │ 52  │ unique   │  ☑   │ Section N │  ← Arrivée (= dernière PH)
-├─────┴─────┴──────────┴──────┴───────────┤
-│  [ + Ajouter une balise ]               │
-└─────────────────────────────────────────┘
+┌─────┬─────┬──────────┬──────┬────────────────────────┬───────────┐
+│ N°  │ ID  │   Tag    │  PH  │     Coordonnées        │  Section  │
+├─────┼─────┼──────────┼──────┼────────────────────────┼───────────┤
+│  1  │ 31  │ unique   │  ☐  │ 45.883424, 5.863804    │ Section 1 │
+│  2  │ 32  │ NO       │  ☐  │                        │ Section 1 │
+│  2  │ 33  │ SE       │  ☐  │                        │ Section 1 │
+│  3  │ 34  │ unique   │  ☑  │ 45.892112, 5.871256    │ Section 1 │  ← Fin section 1 (= PH1)
+│  4  │ 35  │ N        │  ☐  │ 45.905000, 5.865000    │ Section 2 │
+│  4  │ 36  │ S        │  ☐  │                        │ Section 2 │
+│  5  │ 37  │ unique   │  ☐  │ 45.918000, 5.878000    │ Section 2 │
+│  6  │ 38  │ unique   │  ☑  │ 45.930000, 5.885000    │ Section 2 │  ← Fin section 2 (= PH2)
+│ ... │ ... │ ...      │ ...  │ ...                    │ ...       │
+│ 18  │ 52  │ unique   │  ☑  │ 45.945000, 5.890000    │ Section N │  ← Arrivée (= dernière PH)
+├─────┴─────┴──────────┴──────┴────────────────────────┴───────────┤
+│  [ + Ajouter une balise ]                                        │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---

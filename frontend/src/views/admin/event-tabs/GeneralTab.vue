@@ -29,6 +29,7 @@ const templateId = ref<string | null>(null);
 const firstStartTime = ref("");
 const routechoicesUrl = ref("");
 const publicRoutechoicesTime = ref("");
+const gpsPollingEnabled = ref(false);
 const templates = ref<TemplateSummary[]>([]);
 const saving = ref(false);
 const importing = ref(false);
@@ -58,6 +59,7 @@ async function fetchEvent() {
     firstStartTime.value = data.first_start_time ?? "";
     routechoicesUrl.value = data.routechoices_url ?? "";
     publicRoutechoicesTime.value = data.public_routechoices_time ?? "";
+    gpsPollingEnabled.value = data.gps_polling_enabled ?? false;
   } catch {
     error.value = "Impossible de contacter le serveur";
   }
@@ -81,13 +83,14 @@ async function handleSave() {
   success.value = "";
   saving.value = true;
 
-  const payload: Record<string, string | null> = {};
+  const payload: Record<string, string | boolean | null> = {};
   payload.name = name.value || null;
   payload.date = date.value || null;
   payload.template_id = templateId.value || null;
   payload.first_start_time = firstStartTime.value || null;
   payload.routechoices_url = routechoicesUrl.value || null;
   payload.public_routechoices_time = publicRoutechoicesTime.value || null;
+  payload.gps_polling_enabled = gpsPollingEnabled.value;
 
   try {
     const response = await fetch(`/api/events/${props.eventId}`, {
@@ -201,6 +204,19 @@ onMounted(() => {
           title="Heure actuelle"
           @click="publicRoutechoicesTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })"
         >⏱</button>
+      </div>
+    </div>
+
+    <div class="field field-toggle">
+      <label for="event-gps-polling">Polling GPS</label>
+      <div class="toggle-row">
+        <input
+          id="event-gps-polling"
+          v-model="gpsPollingEnabled"
+          type="checkbox"
+          class="toggle-checkbox"
+        />
+        <span class="toggle-label">{{ gpsPollingEnabled ? "Activé" : "Désactivé" }}</span>
       </div>
     </div>
 
@@ -331,6 +347,27 @@ select {
 .time-now-btn:hover {
   background: #e3f2fd;
   border-color: #1976d2;
+}
+
+.field-toggle {
+  margin-bottom: 1rem;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  color: #555;
 }
 
 .msg {

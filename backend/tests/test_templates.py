@@ -150,9 +150,9 @@ def test_put_beacons() -> None:
     token = _get_token()
     tid = _create_template(token)
     beacons = [
-        {"id": 31, "number": 1, "tag": "unique", "is_ph": False},
+        {"id": 31, "number": 1, "tag": "unique", "is_ph": False, "coordinates": "45.883424, 5.863804"},
         {"id": 32, "number": 2, "tag": "NO", "is_ph": False},
-        {"id": 33, "number": 2, "tag": "SE", "is_ph": False},
+        {"id": 33, "number": 2, "tag": "SE", "is_ph": False, "coordinates": "45.890001, 5.870002"},
         {"id": 34, "number": 3, "tag": "unique", "is_ph": True},
     ]
     response = client.put(
@@ -165,12 +165,14 @@ def test_put_beacons() -> None:
     assert len(data) == 4
     assert data[3]["is_ph"] is True
     assert data[0]["id"] == 31
+    assert data[0]["coordinates"] == "45.883424, 5.863804"
+    assert data[1]["coordinates"] is None
 
 
 def test_put_beacons_persists() -> None:
     token = _get_token()
     tid = _create_template(token)
-    beacons = [{"id": 31, "number": 1, "tag": "unique", "is_ph": False}]
+    beacons = [{"id": 31, "number": 1, "tag": "unique", "is_ph": False, "coordinates": "45.883424, 5.863804"}]
     client.put(
         f"/api/templates/{tid}/beacons",
         json=beacons,
@@ -183,6 +185,7 @@ def test_put_beacons_persists() -> None:
     assert response.status_code == 200
     assert len(response.json()) == 1
     assert response.json()[0]["id"] == 31
+    assert response.json()[0]["coordinates"] == "45.883424, 5.863804"
 
 
 def test_get_courses_empty() -> None:

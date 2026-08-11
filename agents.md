@@ -270,6 +270,7 @@ o-suivi/
 │   │   │   ├── log_service.py         ← Création/append de logs (partagé admin + public)
 │   │   │   ├── split_service.py       ← Calcul des temps intermédiaires comparés (splits)
 │   │   │   ├── schedule_service.py    ← Construction de la réponse horaires publique
+│   │   │   ├── routechoices_service.py ← Intégration minimale Routechoices (résolution event_id + fetch GPS brut)
 │   │   │   └── registration_service.py ← Logique inscriptions (CRUD, déduplication, matching)
 │   │   ├── domain/
 │   │   │   ├── exceptions.py          ← Exceptions domaine (EntityNotFound)
@@ -292,6 +293,7 @@ o-suivi/
 │   │       ├── registrations.py      ← RegistrationCreate / RegistrationDetail / RegistrationUpdate
 │   │       ├── users.py              ← User
 │   │       ├── results.py            ← BeaconResult / SectionResult / CompetitorResult / ResultsResponse
+│   │       ├── routechoices.py       ← RoutechoicesGpsRawResponse (payload brut)
 │   │       ├── splits.py             ← CompetitorSummary / SplitEntry / BeaconPairSplits / SplitsResponse
 │   │       ├── tracking.py           ← CompetitorTracking / TrackingResponse
 │   │       └── logs.py               ← Event sourcing : métadonnées (LogMetadata), entrées de log polymorphiques (discriminated union LogEntry), et schémas de requête client
@@ -303,7 +305,8 @@ o-suivi/
 │       ├── test_registrations.py
 │       ├── test_logs.py
 │       ├── test_tracking.py
-│       └── test_public.py
+│       ├── test_public.py
+│       └── test_routechoices.py
 │
 └── frontend/
     ├── package.json                   ← Node deps

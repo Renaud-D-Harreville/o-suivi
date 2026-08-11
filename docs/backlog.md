@@ -16,6 +16,8 @@
 
 ### Fonctionnalités retirées
 
+- ✅ **Fait (2026-08-11, partiel)** : integration minimale backend Routechoices ajoutee (champ evenement `routechoices_event_id` + endpoint admin ponctuel `GET /api/events/{id}/routechoices/gps`, payload brut). Le polling et la logique metier GPS restent en backlog.
+
 #### Configuration (§5.1.1)
 
 - **Coordonnées GPS** dans le registre des balises (champ optionnel latitude/longitude)
@@ -107,6 +109,18 @@ Problèmes :
 ## Corrections de code
 
 > Incohérences ou problèmes techniques identifiés lors de la review, à corriger.
+
+### Bug : `CheckpointLog.apply_to()` utilise `creation_date` comme `passage_time`
+
+**Fichier** : `backend/app/schemas/logs.py`, lignes 171-182
+
+**Problème** : `CheckpointLog.apply_to()` fait `passage_time=to_hms(self.metadata.creation_date)`. Or un concurrent peut saisir son code balise bien après y être passé (ex : zone sans réseau, oubli, saisie groupée en fin de parcours). L'heure de saisie (`creation_date`) n'est PAS l'heure de passage réelle (`passage_time`). Ce sont deux concepts distincts :
+- `creation_date` = quand l'action de saisie a eu lieu (horloge client)
+- `passage_time` = quand le concurrent est réellement passé à la balise (donnée métier)
+
+**Impact** : tous les `checkpoint` logs (saisie par le stagiaire) utilisent l'heure de saisie comme heure de passage, ce qui peut être faux.
+
+**À corriger** : le `CheckpointLog` devrait porter un champ `passage_time` explicite dans sa `data` (comme `CheckpointEditLog`), ou a minima permettre de dissocier les deux notions. Nécessite une réflexion sur le flow côté frontend (le stagiaire doit-il renseigner l'heure de passage en plus du code ?).
 
 ### CORS middleware
 

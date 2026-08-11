@@ -14,6 +14,16 @@ class LogRepository:
 
     _events_dir = DATA_DIR / "events"
 
+    def load_raw(self, event_id: str, user_id: str) -> list[dict]:
+        """Load raw log dicts (for CompetitorState.from_logs)."""
+        log_file = self._log_file(event_id, user_id)
+        if not log_file.exists():
+            return []
+        with log_file.open() as f:
+            raw = json.load(f)
+        raw.sort(key=lambda e: e.get("metadata", {}).get("creation_date", ""))
+        return raw
+
     def load(self, event_id: str, user_id: str) -> list[LogEntry]:
         log_file = self._log_file(event_id, user_id)
         if not log_file.exists():

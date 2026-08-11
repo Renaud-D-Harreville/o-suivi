@@ -10,6 +10,7 @@ interface Beacon {
   number: number | null;
   tag: string;
   is_ph: boolean;
+  coordinates: string | null;
 }
 
 const props = defineProps<{ templateId: string }>();
@@ -42,7 +43,7 @@ async function fetchTemplate() {
     const data = await response.json();
     beacons.value = data.length
       ? data
-      : [{ id: MIN_BEACON_ID, number: 1, tag: "unique", is_ph: false }];
+      : [{ id: MIN_BEACON_ID, number: 1, tag: "unique", is_ph: false, coordinates: null }];
     idCounter = Math.max(...beacons.value.map((b) => b.id)) + 1;
   } catch {
     error.value = "Impossible de contacter le serveur";
@@ -54,7 +55,13 @@ function addBeacon() {
     beacons.value.length > 0
       ? Math.max(...beacons.value.map((b) => b.number ?? 0))
       : 0;
-  beacons.value.push({ id: nextBeaconId(), number: lastNumber + 1, tag: "unique", is_ph: false });
+  beacons.value.push({
+    id: nextBeaconId(),
+    number: lastNumber + 1,
+    tag: "unique",
+    is_ph: false,
+    coordinates: null,
+  });
 }
 
 function removeBeacon(index: number) {
@@ -112,6 +119,7 @@ onMounted(fetchTemplate);
           <th>ID</th>
           <th>Tag</th>
           <th>PH</th>
+          <th>Coordonnees</th>
           <th>Section</th>
           <th></th>
         </tr>
@@ -139,6 +147,14 @@ onMounted(fetchTemplate);
               type="checkbox"
               v-model="beacon.is_ph"
               class="input-checkbox"
+            />
+          </td>
+          <td>
+            <input
+              v-model="beacon.coordinates"
+              type="text"
+              class="input-coordinates"
+              placeholder="45.883424, 5.863804"
             />
           </td>
           <td class="section-cell">Section {{ sections[index] }}</td>
@@ -196,6 +212,14 @@ td {
 
 .input-number {
   width: 60px;
+  padding: 0.375rem;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.input-coordinates {
+  width: 200px;
   padding: 0.375rem;
   font-size: 0.875rem;
   border: 1px solid #ccc;
