@@ -86,9 +86,9 @@ Développer une application nommée **o Suivi** qui permet de :
 │  ┌─────────────────┐  ┌──────────────────────────────┐  │
 │  │  CONFIGURATION  │  │     ÉPREUVE EN COURS         │  │
 │  │                 │  │                              │  │
-│  │  • Événement    │  │  • Vue Départ                │  │
-│  │  • Parcours     │  │  • Vue Suivi (synthétique)   │  │
-│  │  • Participants │  │  • Vue Résultats provisoires │  │
+│  │  • Événement    │  │  • Vue Suivi (départs +      │  │
+│  │  • Parcours     │  │    suivi temps réel)         │  │
+│  │  • Participants │  │                              │  │
 │  └─────────────────┘  └──────────────────────────────┘  │
 │                                                         │
 │  ┌────────────────────────────────────────────────────┐ │
@@ -115,34 +115,24 @@ Les templates définissent les balises, parcours et temps PH de référence. Les
 
 ---
 
-### 5.2 Module Départ (Vue Encadrants)
-
-→ **Spécification détaillée** : [views/depart.md](views/depart.md)
-
-Visualiser et gérer le départ séquentiel des concurrents. L'encadrant confirme manuellement chaque départ via un bouton dédié. L'horaire de départ est toujours modifiable.
-
----
-
-### 5.3 Module Suivi — Vue Synthétique (Vue Encadrants)
+### 5.2 Module Suivi — Départs et suivi en temps réel (Vue Encadrants)
 
 → **Spécification détaillée** : [views/suivi.md](views/suivi.md)
 
-Surveillance en temps réel de l'avancement des concurrents. Liste avec code couleur par statut, détail dépliable par concurrent (portes horaires, balises, actions encadrant), historique des modifications.
+Vue unique combinant la gestion des départs (confirmation, édition des champs d'inscription, DNS) et le suivi en temps réel de l'avancement des concurrents. Liste avec code couleur par statut (vert/orange pour les prochains départs, rouge pour les retards), détail dépliable par concurrent (champs d'inscription éditables, portes horaires, balises, actions encadrant), historique des modifications.
 
 ---
 
-### 5.4 Module Résultats Provisoires (Vue partagée Encadrants + Stagiaires)
+### 5.3 Module Résultats Provisoires (Vue publique)
 
-→ **Spécification détaillée** : [views/resultats.md](views/resultats.md)
+→ **Spécification détaillée** : [views/public_results.md](views/public_results.md)
 
-Récapitulatif de la performance de chaque concurrent : statut par PH, résultat global (validé/non validé), vue détaillée dépliable avec temps par section, liste des balises, et lien Routechoices.
-
-Un **accès public** alternatif (sans authentification) est disponible via un lien partageable. Il affiche les mêmes résultats et permet en plus l'édition des balises de chaque concurrent.
-→ Spécifications : [views/public_results.md](views/public_results.md) et [views/public_beacon_edit.md](views/public_beacon_edit.md)
+Récapitulatif de la performance de chaque concurrent accessible via un lien public sans authentification : statut par PH, résultat global (validé/non validé), vue détaillée dépliable avec temps par section, liste des balises, et lien Routechoices. Permet également l'édition des balises de chaque concurrent.
+→ Spécification édition balises : [views/public_beacon_edit.md](views/public_beacon_edit.md)
 
 ---
 
-### 5.5 Accès Public
+### 5.4 Accès Public
 
 → **Spécifications détaillées** : [views/public_events_list.md](views/public_events_list.md), [views/public_results.md](views/public_results.md), [views/public_beacon_edit.md](views/public_beacon_edit.md) et [views/public_split_times.md](views/public_split_times.md)
 

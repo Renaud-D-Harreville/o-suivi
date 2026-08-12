@@ -6,6 +6,7 @@ import { formatSecondsToHms, formatTime, secondsBetween } from "../utils/date";
 export function useTimeGates(
   allTimeGates: Ref<TimeGates[]>,
   currentTime: Ref<Date>,
+  competitors?: Ref<TrackingCompetitor[]>,
 ) {
   function getGatesForCompetitor(comp: TrackingCompetitor): TimeGateEntry[] {
     if (!comp.course_number) return [];
@@ -102,11 +103,30 @@ export function useTimeGates(
     return formatSecondsToHms(secs);
   }
 
+  function getDepartureClass(comp: TrackingCompetitor): string {
+    if (!competitors) return "row-waiting";
+    const pendingTimes = competitors.value
+      .filter((c) => !c.departed && !c.dns)
+      .map((c) => c.start_time_planned || "99:99")
+      .sort();
+
+    if (pendingTimes.length === 0) return "row-waiting";
+
+    const firstTime = pendingTimes[0];
+    const uniqueTimes = [...new Set(pendingTimes)];
+    const secondTime = uniqueTimes.length > 1 ? uniqueTimes[1] : null;
+    const competitorTime = comp.start_time_planned || "99:99";
+
+    if (competitorTime === firstTime) return "row-next";
+    if (secondTime && competitorTime === secondTime) return "row-upcoming";
+    return "row-waiting";
+  }
+
   function getRowClass(comp: TrackingCompetitor): string {
     if (comp.dns) return "row-dns";
     if (comp.abandoned) return "row-abandon";
     if (comp.current_ph === "Arrivé" && comp.tracker_returned) return "row-arrived";
-    if (!comp.departed) return "row-default";
+    if (!comp.departed) return getDepartureClass(comp);
 
     const gates = getGatesForCompetitor(comp);
     if (comp.current_ph && comp.current_ph !== "Arrivé") {

@@ -75,7 +75,7 @@ function computeRank(index: number, splits: { split_seconds: number }[]): number
 <template>
   <div class="split-times-view">
     <header class="public-header">
-      <AdminBackLink :to="`/admin/events/${eventId}/resultats`" />
+      <AdminBackLink :to="`/admin/events/${eventId}/suivi`" />
       <router-link :to="`/events/${eventId}`" class="back-link">← Retour aux résultats</router-link>
       <h1>Comparaison des temps intermédiaires</h1>
       <p v-if="data" class="event-name">{{ data.event_name }}</p>

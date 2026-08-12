@@ -44,12 +44,12 @@ Encadrants uniquement. Accessible depuis la [page d'accueil admin](../admin_home
 
 ## 4. Navigation entre vues événement
 
-Chaque vue événement (Config, Départ, Suivi, Résultats) partage un **header commun sticky** :
+Chaque vue événement (Config, Suivi) partage un **header commun sticky** :
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  ← Retour    Proba Blanc Sept 2026                          │
-│  [ Config ]  [ Départ ]  [ Suivi ]  [ Résultats ]          │
+│  [ Config ]  [ Suivi ]                                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -57,16 +57,16 @@ Chaque vue événement (Config, Départ, Suivi, Résultats) partage un **header 
 |---------|-------------|
 | ← Retour | Ramène à la page d'accueil admin |
 | Nom de l'événement | Affiché en titre |
-| 4 boutons de navigation | Liens vers les 4 vues événement. Le bouton actif est mis en évidence |
+| 2 boutons de navigation | Liens vers les 2 vues événement. Le bouton actif est mis en évidence |
 
 **Routes correspondantes :**
 
 | Bouton | Route |
 |--------|-------|
 | Config | `/admin/events/:id/config` |
-| Départ | `/admin/events/:id/depart` |
 | Suivi | `/admin/events/:id/suivi` |
-| Résultats | `/admin/events/:id/resultats` |
+
+> 💡 Les anciennes routes `/admin/events/:id/depart` et `/admin/events/:id/resultats` redirigent automatiquement vers `/suivi`.
 
 ---
 

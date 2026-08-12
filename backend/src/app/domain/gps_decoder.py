@@ -24,6 +24,14 @@ class GpsPoint:
     lon: float
 
 
+def decode_last_timestamp(encoded_data: str) -> int | None:
+    """Return the timestamp (ms) of the last GPS point, or None if no data."""
+    points = decode_position_archive(encoded_data)
+    if not points:
+        return None
+    return max(p.timestamp_ms for p in points)
+
+
 def decode_position_archive(encoded_data: str) -> list[GpsPoint]:
     """Decode a PositionArchive string into a list of GpsPoints.
 

@@ -65,7 +65,7 @@ function arrivalLabel(c: PublicCompetitorResult): string {
 <template>
   <div class="public-results-view">
     <header class="public-header">
-      <AdminBackLink :to="`/admin/events/${eventId}/resultats`" />
+      <AdminBackLink :to="`/admin/events/${eventId}/suivi`" />
       <h1>Résultats</h1>
     </header>
 

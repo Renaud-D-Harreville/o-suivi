@@ -42,7 +42,7 @@ Liste triée par **ordre d'arrivée** (premiers arrivés en haut), DNS en fin de
 Un concurrent est considéré comme **arrivé** dès lors qu'il a franchi la dernière PH, ou qu'il est en **abandon** ou **DNS**.
 
 - Ligne unique : Prénom N. (initiale du nom + point) · **"Arrivé"** (homme) ou **"Arrivée"** (femme) — texte neutre, pas d'indicateur de validation
-- Mêmes cas particuliers que [resultats.md](resultats.md) (DNS grisé/barré/non cliquable, Abandon badge affiché)
+- Mêmes cas particuliers que la vue suivi (DNS grisé/barré/non cliquable, Abandon badge affiché)
 
 > 💡 La vue publique ne montre **aucun indicateur de validation** (ni ✅ ni ❌) dans la liste. Le stagiaire doit ouvrir le détail pour voir ses résultats détaillés.
 > 💡 **Anonymisation** : toutes les vues publiques affichent "Prénom N." (première lettre du nom de famille + point) au lieu du nom complet.
@@ -78,7 +78,7 @@ Aucune autre information affichée (pas de §4.3, §4.4, §4.5).
 
 ### 4.3 Informations générales (concurrent arrivé uniquement)
 
-Identique à [resultats.md §4.1](resultats.md) :
+Identique à la vue résultats admin (supprimée, fonctionnalité conservée dans les vues publiques) :
 - Poids du sac (Départ / Arrivée)
 - Heure de départ réelle
 - Heure d'arrivée
@@ -98,20 +98,33 @@ Tableau récapitulatif par section :
 
 ### 4.5 Liste détaillée des balises (concurrent arrivé uniquement)
 
-Identique à [resultats.md §4.3](resultats.md) :
+Contenu identique :
 - N°, code saisi, validité, temps intermédiaire, cumulé section
 
 ---
 
 ## 5. Critères de validation
 
-Identiques à [resultats.md §5](resultats.md) — mêmes règles de validation globale et par section.
+Mêmes règles de validation globale et par section que l'ancienne vue résultats admin :
+
+### 5.1 Validation globale
+
+Un concurrent est **VALIDÉ** si et seulement si **toutes ses sections sont validées**.
+
+### 5.2 Validation par section (PH)
+
+Une section est **validée** (✅) si :
+
+1. La PH est passée dans les temps (borne max obligatoire ; borne min si définie par l'organisateur)
+2. Toutes les balises **de cette section** ont été validées (code correct)
+3. Les balises de la section sont validées **dans le bon ordre**
+4. Uniquement les balises de cette section (pas de balise d'un autre parcours)
 
 ---
 
 ## 6. Données utilisées (en lecture)
 
-Mêmes données que [resultats.md §6](resultats.md), plus :
+Données utilisées :
 
 | Donnée | Source |
 |--------|--------|

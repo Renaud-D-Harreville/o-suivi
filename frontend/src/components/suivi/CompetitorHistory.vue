@@ -9,6 +9,13 @@ const ACTION_TYPES = [
   "abandon_cancel",
   "tracker_returned",
   "tracker_returned_cancel",
+  "departure",
+  "departure_cancel",
+  "departure_edit",
+  "dns",
+  "dns_cancel",
+  "bag_weight",
+  "registration_edit",
 ];
 
 function filteredLogs(): LogEntry[] {
@@ -32,6 +39,20 @@ function formatEntry(log: LogEntry): string {
       return `Tracker rendu (n°${log.data?.tracker_number})`;
     case "tracker_returned_cancel":
       return "Annulation rendu tracker";
+    case "departure":
+      return "Départ";
+    case "departure_cancel":
+      return "Annulation départ";
+    case "departure_edit":
+      return `Modification départ : ${log.data?.departure_time || "—"}`;
+    case "dns":
+      return `Absent : ${log.data?.comment || "—"}`;
+    case "dns_cancel":
+      return `Annulation absent : ${log.data?.comment || "—"}`;
+    case "bag_weight":
+      return `Poids sac : ${log.data?.weight_kg || "—"} kg`;
+    case "registration_edit":
+      return `Modification inscription`;
     default:
       return log.log_type;
   }

@@ -3,9 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 const LoginView = () => import("../views/LoginView.vue");
 const AdminHomeView = () => import("../views/admin/AdminHomeView.vue");
 const EventConfigView = () => import("../views/admin/EventConfigView.vue");
-const DepartView = () => import("../views/admin/DepartView.vue");
 const SuiviView = () => import("../views/admin/SuiviView.vue");
-const ResultatsView = () => import("../views/admin/ResultatsView.vue");
 const TemplateConfigView = () => import("../views/admin/TemplateConfigView.vue");
 const PublicResultsView = () => import("../views/public/PublicResultsView.vue");
 const PublicBeaconEditView = () => import("../views/public/PublicBeaconEditView.vue");
@@ -57,9 +55,7 @@ const router = createRouter({
     },
     {
       path: "/admin/events/:id/depart",
-      name: "event-depart",
-      component: DepartView,
-      meta: { requiresAuth: true },
+      redirect: (to) => `/admin/events/${to.params.id}/suivi`,
     },
     {
       path: "/admin/events/:id/suivi",
@@ -69,9 +65,7 @@ const router = createRouter({
     },
     {
       path: "/admin/events/:id/resultats",
-      name: "event-resultats",
-      component: ResultatsView,
-      meta: { requiresAuth: true },
+      redirect: (to) => `/admin/events/${to.params.id}/suivi`,
     },
     {
       path: "/events",

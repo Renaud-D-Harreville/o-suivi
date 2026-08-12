@@ -12,6 +12,9 @@ import { useClock } from "../../composables/useClock";
 import { useTimeGates } from "../../composables/useTimeGates";
 import { useBeaconEdit } from "../../composables/useBeaconEdit";
 import { useCompetitorActions } from "../../composables/useCompetitorActions";
+import { useInlineEdit } from "../../composables/useInlineEdit";
+import { useDepartureActions } from "../../composables/useDepartureActions";
+import { useGpsStatus } from "../../composables/useGpsStatus";
 import { formatTime } from "../../utils/date";
 import { copyPhone } from "../../utils/clipboard";
 import { useEventStore } from "../../stores/event-store";
@@ -32,9 +35,12 @@ const expandedId = ref<string | null>(null);
 
 const { connected, reconnect } = useWebSocket(eventId);
 
-const tg = useTimeGates(timeGates, currentTime);
+const tg = useTimeGates(timeGates, currentTime, competitors);
 const be = useBeaconEdit(eventId, competitors);
 const actions = useCompetitorActions(eventId, competitors);
+const { editValue, startEdit, cancelEdit, isEditing, clearEdit } = useInlineEdit();
+const da = useDepartureActions(eventId, competitors);
+const { gpsStatuses } = useGpsStatus(eventId);
 
 async function loadData() {
   const ok = await store.fetchTracking(eventId);
@@ -80,6 +86,17 @@ function toggleExpand(userId: string) {
   expandedId.value = expandedId.value === userId ? null : userId;
 }
 
+async function handleSaveEdit(userId: string, field: string) {
+  await da.saveRegistrationField(userId, field, editValue.value || null);
+  clearEdit();
+}
+
+async function handleConfirmDepartureWithTime(userId: string) {
+  if (!editValue.value) { cancelEdit(); return; }
+  await da.confirmDepartureWithTime(userId, editValue.value);
+  clearEdit();
+}
+
 onMounted(loadData);
 </script>
 
@@ -111,49 +128,122 @@ onMounted(loadData);
             <span v-if="tg.getElapsedSinceLastPh(comp)" class="comp-elapsed">
               {{ tg.getElapsedSinceLastPh(comp) }}
             </span>
+            <span v-if="gpsStatuses[comp.user_id]" :class="['gps-dot', `gps-${gpsStatuses[comp.user_id]}`]"></span>
             <span v-if="comp.tracker_number && !comp.tracker_returned" class="comp-tracker">📡</span>
+            <button v-if="!comp.departed && !comp.dns" class="depart-btn" @click.stop="da.confirmDeparture(comp.user_id)">DÉPART</button>
+            <span v-else-if="comp.departed" class="departed-label">Parti à {{ comp.departure_time?.substring(0, 5) || "—" }}</span>
             <button class="expand-btn">{{ expandedId === comp.user_id ? "−" : "+" }}</button>
           </div>
 
           <!-- Expanded panel -->
           <div v-if="expandedId === comp.user_id" class="expand-panel">
-            <div class="section-info">
+            <div class="section-depart">
               <div v-if="comp.phone" class="field-row">
+                <span class="field-label">Téléphone :</span>
                 <span class="phone-value" @click="copyPhone(comp.phone)">{{ comp.phone }}</span>
                 <a :href="`tel:${comp.phone}`" class="phone-call">📞</a>
               </div>
+
+              <div class="field-row">
+                <span class="field-label">Horaire prévu :</span>
+                <template v-if="!isEditing(comp.user_id, 'start_time_planned')">
+                  <span class="field-value">{{ comp.start_time_planned || "—" }}</span>
+                  <button class="edit-btn" @click="startEdit(comp.user_id, 'start_time_planned', comp.start_time_planned)">✏️</button>
+                </template>
+                <template v-else>
+                  <input v-model="editValue" type="time" class="edit-input" />
+                  <button class="confirm-btn" @click="handleSaveEdit(comp.user_id, 'start_time_planned')">✓</button>
+                  <button class="cancel-btn" @click="cancelEdit()">✗</button>
+                </template>
+              </div>
+
+              <div class="field-row">
+                <span class="field-label">Départ réel :</span>
+                <template v-if="!isEditing(comp.user_id, 'actual_departure')">
+                  <span class="field-value">{{ comp.departure_time ? comp.departure_time.substring(0, 5) : "—" }}</span>
+                  <button class="edit-btn" @click="startEdit(comp.user_id, 'actual_departure', comp.departure_time ? comp.departure_time.substring(0, 5) : comp.start_time_planned)">✏️</button>
+                </template>
+                <template v-else>
+                  <input v-model="editValue" type="time" class="edit-input" />
+                  <button class="confirm-btn" @click="handleConfirmDepartureWithTime(comp.user_id)">✓</button>
+                  <button class="cancel-btn" @click="cancelEdit()">✗</button>
+                </template>
+              </div>
+
               <div class="field-row">
                 <span class="field-label">Parcours :</span>
-                <span class="field-value">{{ comp.course_number || "—" }}</span>
+                <template v-if="!isEditing(comp.user_id, 'course_number')">
+                  <span class="field-value">{{ comp.course_number || "—" }}</span>
+                  <button class="edit-btn" @click="startEdit(comp.user_id, 'course_number', comp.course_number)">✏️</button>
+                </template>
+                <template v-else>
+                  <input v-model="editValue" type="number" min="1" max="6" class="edit-input edit-input-sm" />
+                  <button class="confirm-btn" @click="handleSaveEdit(comp.user_id, 'course_number')">✓</button>
+                  <button class="cancel-btn" @click="cancelEdit()">✗</button>
+                </template>
+              </div>
+
+              <div class="field-row">
+                <span class="field-label">N° tracker :</span>
+                <template v-if="!isEditing(comp.user_id, 'tracker_number')">
+                  <span class="field-value">{{ comp.tracker_number || "—" }}</span>
+                  <button class="edit-btn" @click="startEdit(comp.user_id, 'tracker_number', comp.tracker_number)">✏️</button>
+                </template>
+                <template v-else>
+                  <input v-model="editValue" type="text" class="edit-input edit-input-sm" />
+                  <button class="confirm-btn" @click="handleSaveEdit(comp.user_id, 'tracker_number')">✓</button>
+                  <button class="cancel-btn" @click="cancelEdit()">✗</button>
+                </template>
+              </div>
+
+              <div class="field-row">
+                <span class="field-label">Poids sac (kg) :</span>
+                <template v-if="!isEditing(comp.user_id, 'bag_weight')">
+                  <span class="field-value">{{ comp.bag_weight_start != null ? comp.bag_weight_start : "—" }}</span>
+                  <button class="edit-btn" @click="startEdit(comp.user_id, 'bag_weight', comp.bag_weight_start)">✏️</button>
+                </template>
+                <template v-else>
+                  <input v-model="editValue" type="number" step="0.1" min="0" class="edit-input edit-input-sm" />
+                  <button class="confirm-btn" @click="handleSaveEdit(comp.user_id, 'bag_weight')">✓</button>
+                  <button class="cancel-btn" @click="cancelEdit()">✗</button>
+                </template>
+              </div>
+
+              <div class="expand-actions">
+                <button v-if="!comp.dns && !comp.departed" class="action-btn dns-btn" @click="da.markDns(comp.user_id)">Absent</button>
+                <button v-if="comp.dns" class="action-btn cancel-dns-btn" @click="da.cancelDns(comp.user_id)">Annuler absent</button>
+                <button v-if="comp.departed" class="action-btn cancel-depart-btn" @click="da.cancelDeparture(comp.user_id)">Annuler le départ</button>
               </div>
             </div>
 
-            <PhTable :rows="computePhRows(comp)" />
+            <template v-if="comp.departed">
+              <PhTable :rows="computePhRows(comp)" />
 
-            <BeaconEditTable
-              :beacons="comp.beacons"
-              :inputs="be.getInputs(comp.user_id)"
-              :saving-b-idx="be.savingRow.value?.userId === comp.user_id ? be.savingRow.value.bIdx : null"
-              :ph-arrival-inputs="be.getPhArrivalInputs(comp.user_id)"
-              @save="(bIdx: number) => be.saveRow(comp.user_id, bIdx)"
-              @cancel="(bIdx: number) => be.resetRow(comp.user_id, bIdx)"
-              @fill-time="(bIdx: number) => be.fillCurrentTime(comp.user_id, bIdx)"
-              @save-ph-arrival="(bIdx: number) => be.savePhArrival(comp.user_id, bIdx)"
-              @cancel-ph-arrival="(bIdx: number) => be.resetPhArrival(comp.user_id, bIdx)"
-              @fill-ph-arrival-time="(bIdx: number) => be.fillPhArrivalCurrentTime(comp.user_id, bIdx)"
-            />
+              <BeaconEditTable
+                :beacons="comp.beacons"
+                :inputs="be.getInputs(comp.user_id)"
+                :saving-b-idx="be.savingRow.value?.userId === comp.user_id ? be.savingRow.value.bIdx : null"
+                :ph-arrival-inputs="be.getPhArrivalInputs(comp.user_id)"
+                @save="(bIdx: number) => be.saveRow(comp.user_id, bIdx)"
+                @cancel="(bIdx: number) => be.resetRow(comp.user_id, bIdx)"
+                @fill-time="(bIdx: number) => be.fillCurrentTime(comp.user_id, bIdx)"
+                @save-ph-arrival="(bIdx: number) => be.savePhArrival(comp.user_id, bIdx)"
+                @cancel-ph-arrival="(bIdx: number) => be.resetPhArrival(comp.user_id, bIdx)"
+                @fill-ph-arrival-time="(bIdx: number) => be.fillPhArrivalCurrentTime(comp.user_id, bIdx)"
+              />
 
-            <CompetitorActions
-              :departed="comp.departed"
-              :dns="comp.dns"
-              :abandoned="comp.abandoned"
-              :tracker-returned="comp.tracker_returned"
-              :tracker-number="comp.tracker_number"
-              @abandon="actions.markAbandon(comp.user_id)"
-              @cancel-abandon="actions.cancelAbandon(comp.user_id)"
-              @tracker-returned="actions.markTrackerReturned(comp.user_id)"
-              @cancel-tracker-returned="actions.cancelTrackerReturned(comp.user_id)"
-            />
+              <CompetitorActions
+                :departed="comp.departed"
+                :dns="comp.dns"
+                :abandoned="comp.abandoned"
+                :tracker-returned="comp.tracker_returned"
+                :tracker-number="comp.tracker_number"
+                @abandon="actions.markAbandon(comp.user_id)"
+                @cancel-abandon="actions.cancelAbandon(comp.user_id)"
+                @tracker-returned="actions.markTrackerReturned(comp.user_id)"
+                @cancel-tracker-returned="actions.cancelTrackerReturned(comp.user_id)"
+              />
+            </template>
 
             <CompetitorHistory :logs="comp.logs" />
           </div>
@@ -194,6 +284,9 @@ onMounted(loadData);
 }
 
 .row-default { background-color: #fff; }
+.row-next { background-color: #e8f5e9; border-color: #4caf50; }
+.row-upcoming { background-color: #fff3e0; border-color: #ff9800; }
+.row-waiting { background-color: #fff; }
 .row-late { background-color: #ffebee; border-color: #f44336; }
 .row-arrived { background-color: #f5f5f5; opacity: 0.7; }
 .row-dns, .row-abandon { background-color: #f3e5f5; opacity: 0.8; }
@@ -204,6 +297,10 @@ onMounted(loadData);
 .comp-ph { font-size: 0.85rem; font-weight: 600; color: #1976d2; }
 .comp-elapsed { font-size: 0.85rem; font-weight: 600; font-variant-numeric: tabular-nums; color: #555; }
 .comp-tracker { font-size: 1rem; }
+.gps-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; vertical-align: middle; }
+.gps-green { background-color: #4caf50; }
+.gps-orange { background-color: #ff9800; }
+.gps-red { background-color: #f44336; }
 
 .expand-btn {
   width: 28px; height: 28px; border: 1px solid #ccc; border-radius: 50%;
@@ -218,8 +315,44 @@ onMounted(loadData);
 
 .section-info { display: flex; flex-direction: column; gap: 0.25rem; }
 .field-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
-.field-label { font-weight: 600; }
+.field-label { font-weight: 600; min-width: 130px; }
 .field-value { color: #333; }
 .phone-value { color: #1976d2; cursor: pointer; text-decoration: underline; }
 .phone-call { text-decoration: none; font-size: 1.1rem; }
+
+.depart-btn {
+  padding: 0.3rem 1rem; font-size: 0.8rem; font-weight: 700;
+  color: #fff; background-color: #1976d2; border: none;
+  border-radius: 6px; cursor: pointer; white-space: nowrap;
+}
+.depart-btn:hover { background-color: #1565c0; }
+.depart-btn:active { background-color: #0d47a1; }
+.departed-label { font-size: 0.8rem; color: #666; font-style: italic; white-space: nowrap; }
+
+.section-depart {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding-bottom: 0.75rem; border-bottom: 1px solid #e0e0e0;
+}
+
+.edit-btn { background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 0.1rem 0.3rem; }
+.edit-input { padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; width: 100px; }
+.edit-input-sm { width: 60px; }
+.confirm-btn, .cancel-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 0.1rem 0.4rem; }
+.confirm-btn { color: #4caf50; }
+.cancel-btn { color: #f44336; }
+
+.expand-actions {
+  display: flex; gap: 0.5rem; margin-top: 0.25rem;
+  padding-top: 0.5rem; border-top: 1px solid #eee;
+}
+.action-btn {
+  padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+  border: 1px solid; border-radius: 4px; cursor: pointer; background: #fff;
+}
+.dns-btn { color: #f44336; border-color: #f44336; }
+.dns-btn:hover { background: #ffebee; }
+.cancel-dns-btn { color: #ff9800; border-color: #ff9800; }
+.cancel-dns-btn:hover { background: #fff3e0; }
+.cancel-depart-btn { color: #ff9800; border-color: #ff9800; }
+.cancel-depart-btn:hover { background: #fff3e0; }
 </style>

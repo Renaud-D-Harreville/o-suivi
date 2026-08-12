@@ -1,12 +1,14 @@
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import require_organizer
+from app.domain.gps_decoder import decode_last_timestamp
 from app.repositories.event_repository import EventRepository
 from app.repositories.template_repository import TemplateRepository
 from app.schemas.events import EventCreate, EventDetail, EventSummary, EventUpdate
-from app.schemas.routechoices import RoutechoicesGpsRawResponse
+from app.schemas.routechoices import GpsStatusEntry, GpsStatusResponse, RoutechoicesGpsRawResponse
 from app.schemas.tracking import TrackingResponse
 from app.services.routechoices_service import (
     RoutechoicesResolutionError,
@@ -79,5 +81,42 @@ async def get_routechoices_gps(event_id: str) -> RoutechoicesGpsRawResponse:
         event_repo.set_routechoices_event_id(event_id, routechoices_event_id)
 
     return RoutechoicesGpsRawResponse(routechoices_event_id=routechoices_event_id, payload=payload)
+
+
+@router.get("/{event_id}/gps-status", response_model=GpsStatusResponse, dependencies=_auth)
+async def get_gps_status(event_id: str) -> GpsStatusResponse:
+    event_repo = _events()
+    event = event_repo.load(event_id)
+
+    if not event.routechoices_url and not event.routechoices_event_id:
+        return GpsStatusResponse()
+
+    service = RoutechoicesService()
+    try:
+        rc_event_id = service.resolve_event_id(event)
+        rc_data = service.fetch_event_payload(rc_event_id)
+    except (RoutechoicesResolutionError, RoutechoicesUpstreamError):
+        return GpsStatusResponse()
+
+    sn_to_user: dict[str, str] = {}
+    for reg in event.registrations:
+        if reg.routechoices_short_name:
+            sn_to_user[reg.routechoices_short_name.lower()] = reg.user_id
+
+    statuses: dict[str, GpsStatusEntry] = {}
+    for rc_comp in rc_data.competitors:
+        if not rc_comp.short_name:
+            continue
+        user_id = sn_to_user.get(rc_comp.short_name.lower())
+        if user_id is None:
+            continue
+        ts_ms = decode_last_timestamp(rc_comp.encoded_data)
+        if ts_ms is not None:
+            iso = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).isoformat(timespec="seconds")
+            statuses[user_id] = GpsStatusEntry(last_timestamp=iso)
+        else:
+            statuses[user_id] = GpsStatusEntry(last_timestamp=None)
+
+    return GpsStatusResponse(statuses=statuses)
 
 

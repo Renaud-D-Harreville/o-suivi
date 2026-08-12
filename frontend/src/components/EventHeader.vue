@@ -11,9 +11,7 @@ const route = useRoute();
 
 const navItems = [
   { key: "config", label: "Config", routeName: "event-config" },
-  { key: "depart", label: "Départ", routeName: "event-depart" },
   { key: "suivi", label: "Suivi", routeName: "event-suivi" },
-  { key: "resultats", label: "Résultats", routeName: "event-resultats" },
 ] as const;
 
 function isActive(routeName: string): boolean {

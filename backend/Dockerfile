@@ -13,6 +13,8 @@ RUN uv sync --no-dev --no-install-project && chown -R $UID:$GID /app
 
 COPY --chown=appuser:appuser . .
 
+ENV PYTHONPATH=/app/src
+
 USER appuser
 
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

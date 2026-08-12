@@ -102,7 +102,7 @@ Tableau ordonné des participants avec horaires et parcours calculés automatiqu
 
 ## 6. Règles métier
 
-- L'ordre de départ et les horaires restent modifiables à tout moment (y compris pendant l'épreuve, via la [vue Départ](../depart.md))
+- L'ordre de départ et les horaires restent modifiables à tout moment (y compris pendant l'épreuve, via la [vue Suivi](../suivi.md))
 - Le parcours attribué est modifiable à tout moment
-- L'horaire affiché est l'horaire **prévu** — l'heure réelle de départ est enregistrée lors du clic "Départ" dans la vue Départ
+- L'horaire affiché est l'horaire **prévu** — l'heure réelle de départ est enregistrée lors du clic "DÉPART" dans la vue Suivi
 

@@ -16,6 +16,7 @@ function getGatesForCompetitor(comp: TrackingCompetitor): TimeGateEntry[] {
 
 const counters = computed(() => {
   const all = props.competitors;
+  const waiting = all.filter((c) => !c.departed && !c.dns).length;
   const departed = all.filter((c) => c.departed && !c.dns && !c.abandoned);
   const arrived = all.filter((c) => c.current_ph === "Arrivé");
   const dnsCount = all.filter((c) => c.dns).length;
@@ -32,6 +33,7 @@ const counters = computed(() => {
   }
 
   return {
+    waiting,
     departed: departed.length,
     inCourse: Math.max(0, inCourse),
     sections,
@@ -44,6 +46,7 @@ const counters = computed(() => {
 
 <template>
   <div class="summary">
+    <div class="summary-item"><strong>En attente</strong> {{ counters.waiting }}</div>
     <div class="summary-item"><strong>Partis</strong> {{ counters.departed }}</div>
     <div class="summary-item"><strong>En course</strong> {{ counters.inCourse }}</div>
     <div class="summary-item" v-for="(count, idx) in counters.sections" :key="idx">

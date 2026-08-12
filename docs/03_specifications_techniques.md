@@ -108,9 +108,7 @@ frontend/
 │       │   └── PublicBeaconEditView.vue
 │       └── admin/                 # Vues encadrants (auth requise)
 │           ├── AdminHomeView.vue
-│           ├── DepartView.vue
 │           ├── SuiviView.vue
-│           ├── ResultatsView.vue
 │           ├── EventConfigView.vue
 │           ├── TemplateConfigView.vue
 │           ├── event-tabs/        # Onglets configuration événement

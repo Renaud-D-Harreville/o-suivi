@@ -43,7 +43,7 @@ L'horaire de passage utilisé est :
 - Pour une balise non-PH : l'horaire du checkpoint
 - Pour la dernière PH : l'horaire du checkpoint (arrivée finale)
 
-> 💡 C'est cohérent avec le calcul des temps intermédiaires de la vue résultats ([resultats.md §4.3](resultats.md)).
+> 💡 C'est cohérent avec le calcul des temps intermédiaires de la vue résultats publique ([public_results.md §4.5](public_results.md)).
 
 ---
 

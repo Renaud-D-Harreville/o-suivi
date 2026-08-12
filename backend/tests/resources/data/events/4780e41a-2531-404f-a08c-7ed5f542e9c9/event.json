@@ -1,0 +1,83 @@
+{
+  "id": "4780e41a-2531-404f-a08c-7ed5f542e9c9",
+  "name": "Tracking Test",
+  "date": null,
+  "template_id": null,
+  "first_start_time": null,
+  "routechoices_url": null,
+  "routechoices_event_id": null,
+  "gps_polling_enabled": false,
+  "start_mode": null,
+  "beacons": [
+    {
+      "id": 31,
+      "number": 1,
+      "tag": "unique",
+      "is_ph": false,
+      "code": "AB"
+    },
+    {
+      "id": 32,
+      "number": 2,
+      "tag": "unique",
+      "is_ph": true,
+      "code": "CD"
+    },
+    {
+      "id": 33,
+      "number": 3,
+      "tag": "unique",
+      "is_ph": false,
+      "code": "EF"
+    },
+    {
+      "id": 34,
+      "number": 4,
+      "tag": "unique",
+      "is_ph": true,
+      "code": "GH"
+    }
+  ],
+  "courses": [
+    {
+      "number": 1,
+      "beacons": [
+        31,
+        32,
+        33,
+        34
+      ]
+    }
+  ],
+  "time_gates": [
+    {
+      "course_number": 1,
+      "gates": [
+        {
+          "gate": "PH1",
+          "min_m": 30,
+          "max_m": 60,
+          "min_f": 30,
+          "max_f": 70
+        },
+        {
+          "gate": "PH2",
+          "min_m": 20,
+          "max_m": 45,
+          "min_f": 20,
+          "max_f": 55
+        }
+      ]
+    }
+  ],
+  "registrations": [
+    {
+      "user_id": "198a3c8b-56e1-40f6-a93b-28adee8b501e",
+      "course_number": 1,
+      "start_order": null,
+      "start_time_planned": null,
+      "tracker_number": null,
+      "routechoices_short_name": null
+    }
+  ]
+}

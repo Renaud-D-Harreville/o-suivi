@@ -12,9 +12,8 @@
 ### What it does
 
 - **Configure** training events (courses, checkpoints, participants)
-- **Manage departures** of competitors sequentially
-- **Track in real-time** each competitor's progress during the event
-- **Display results** (provisional and final) to organizers and competitors
+- **Track in real-time** each competitor's progress, including departure management, during the event
+- **Display results** (provisional and final) to competitors via public views
 
 ### Key constraints
 
@@ -27,7 +26,7 @@
 
 ### Users
 
-- **Encadrants (Organizers)**: Full access to all admin views (Configuration, Départ, Suivi, Résultats)
+- **Encadrants (Organizers)**: Full access to all admin views (Configuration, Suivi)
 - **Stagiaires (Competitors)**: Can view results and edit beacons via shared public links (no authentication required)
 
 ### Documentation reference
@@ -219,9 +218,7 @@ o-suivi/
 │   ├── backlog.md                             ← Deferred features & ideas
 │   └── views/
 │       ├── admin_home.md                      ← Admin home page (templates + events lists)
-│       ├── depart.md                          ← Departure view spec
-│       ├── suivi.md                           ← Tracking view spec
-│       ├── resultats.md                       ← Results view spec
+│       ├── suivi.md                           ← Tracking view spec (includes departure management)
 │       ├── public_results.md                       ← Public results view spec (no auth)
 │       ├── public_split_times.md                   ← Public split times comparison view spec (no auth)
 │       ├── public_schedule.md                       ← Public schedule view spec (no auth)
@@ -249,54 +246,55 @@ o-suivi/
 │   │   ├── users.json                 ← User storage (JSON)
 │   │   ├── templates/                 ← One JSON file per template
 │   │   └── events/                    ← One folder per event (event.json + logs/)
-│   ├── app/
-│   │   ├── main.py                    ← FastAPI app entrypoint
-│   │   ├── config.py                  ← Settings (JWT, paths)
-│   │   ├── dependencies.py            ← Auth dependency (get_current_user)
-│   │   ├── routers/
-│   │   │   ├── auth.py                ← POST /api/auth/login
-│   │   │   ├── templates.py           ← GET/POST /api/templates, GET/PATCH /api/templates/{id}
-│   │   │   ├── events.py             ← GET/POST /api/events, GET/PATCH /api/events/{id}, POST import-template
-│   │   │   ├── registrations.py      ← GET/POST/DELETE/PUT/PATCH /api/events/{id}/registrations, GET checkpoints
-│   │   │   ├── logs.py               ← POST actions d'épreuve (départ, DNS, abandon, tracker, checkpoints, PH…) + GET logs
-│   │   │   ├── public.py             ← Endpoints publics sans auth (résultats, checkpoints, éditions balises/PH)
-│   │   │   └── ws.py                 ← WebSocket endpoint /api/events/{id}/ws (real-time refresh signal)
-│   │   ├── websocket/
-│   │   │   └── connection_manager.py ← ConnectionManager (manages WS connections per event, broadcasts refresh)
-│   │   ├── services/
-│   │   │   ├── results_service.py     ← Calcul des résultats (orchestration)
-│   │   │   ├── tracking_service.py    ← Données de suivi agrégées (endpoint /tracking)
-│   │   │   ├── checkpoint_service.py  ← Récupération des checkpoints d'un concurrent
-│   │   │   ├── log_service.py         ← Création/append de logs (partagé admin + public)
-│   │   │   ├── split_service.py       ← Calcul des temps intermédiaires comparés (splits)
-│   │   │   ├── schedule_service.py    ← Construction de la réponse horaires publique
-│   │   │   ├── routechoices_service.py ← Intégration minimale Routechoices (résolution event_id + fetch GPS brut)
-│   │   │   └── registration_service.py ← Logique inscriptions (CRUD, déduplication, matching)
-│   │   ├── domain/
-│   │   │   ├── exceptions.py          ← Exceptions domaine (EntityNotFound)
-│   │   │   ├── competitor_state.py    ← CompetitorState + CheckpointEntry (reconstruction depuis logs)
-│   │   │   ├── beacon_analyzer.py     ← Analyse des passages balises
-│   │   │   ├── section_validator.py   ← Validation des sections PH
-│   │   │   ├── results_calculator.py  ← Logique métier résultats (validité, finish, tri)
-│   │   │   ├── split_calculator.py    ← Extraction paires de balises + calcul des splits
-│   │   │   └── time_utils.py          ← Utilitaires temps
-│   │   ├── repositories/
-│   │   │   ├── event_repository.py    ← CRUD événements (objets typés)
-│   │   │   ├── template_repository.py ← CRUD templates (objets typés)
-│   │   │   ├── log_repository.py      ← Chargement + append logs (tri par creation_date)
-│   │   │   └── user_repository.py     ← CRUD utilisateurs (cache + persistance)
-│   │   └── schemas/
-│   │       ├── auth.py                ← TokenPayload / LoginRequest / LoginResponse
-│   │       ├── common.py             ← HealthResponse
-│   │       ├── templates.py           ← Beacon(is_ph) / Course / CourseDetail / Gate / CourseTimeGates / NameBody (=TemplateCreate=TemplateUpdate) / TemplateSummary / TemplateImportData
-│   │       ├── events.py             ← StartMode / EventRegistration / EventBeacon(Beacon) / EventCreate(=NameBody) / EventSummary / EventDetail / EventUpdate / ScheduleEntry / ScheduleResponse
-│   │       ├── registrations.py      ← RegistrationCreate / RegistrationDetail / RegistrationUpdate
-│   │       ├── users.py              ← User
-│   │       ├── results.py            ← BeaconResult / SectionResult / CompetitorResult / ResultsResponse
-│   │       ├── routechoices.py       ← RoutechoicesGpsRawResponse (payload brut)
-│   │       ├── splits.py             ← CompetitorSummary / SplitEntry / BeaconPairSplits / SplitsResponse
-│   │       ├── tracking.py           ← CompetitorTracking / TrackingResponse
-│   │       └── logs.py               ← Event sourcing : métadonnées (LogMetadata), entrées de log polymorphiques (discriminated union LogEntry), et schémas de requête client
+│   ├── src/
+│   │   └── app/
+│   │       ├── main.py                    ← FastAPI app entrypoint
+│   │       ├── config.py                  ← Settings (JWT, paths)
+│   │       ├── dependencies.py            ← Auth dependency (get_current_user)
+│   │       ├── routers/
+│   │       │   ├── auth.py                ← POST /api/auth/login
+│   │       │   ├── templates.py           ← GET/POST /api/templates, GET/PATCH /api/templates/{id}
+│   │       │   ├── events.py             ← GET/POST /api/events, GET/PATCH /api/events/{id}, POST import-template
+│   │       │   ├── registrations.py      ← GET/POST/DELETE/PUT/PATCH /api/events/{id}/registrations, GET checkpoints
+│   │       │   ├── logs.py               ← POST actions d'épreuve (départ, DNS, abandon, tracker, checkpoints, PH…) + GET logs
+│   │       │   ├── public.py             ← Endpoints publics sans auth (résultats, checkpoints, éditions balises/PH)
+│   │       │   └── ws.py                 ← WebSocket endpoint /api/events/{id}/ws (real-time refresh signal)
+│   │       ├── websocket/
+│   │       │   └── connection_manager.py ← ConnectionManager (manages WS connections per event, broadcasts refresh)
+│   │       ├── services/
+│   │       │   ├── results_service.py     ← Calcul des résultats (orchestration)
+│   │       │   ├── tracking_service.py    ← Données de suivi agrégées (endpoint /tracking)
+│   │       │   ├── checkpoint_service.py  ← Récupération des checkpoints d'un concurrent
+│   │       │   ├── log_service.py         ← Création/append de logs (partagé admin + public)
+│   │       │   ├── split_service.py       ← Calcul des temps intermédiaires comparés (splits)
+│   │       │   ├── schedule_service.py    ← Construction de la réponse horaires publique
+│   │       │   ├── routechoices_service.py ← Intégration minimale Routechoices (résolution event_id + fetch GPS brut)
+│   │       │   └── registration_service.py ← Logique inscriptions (CRUD, déduplication, matching)
+│   │       ├── domain/
+│   │       │   ├── exceptions.py          ← Exceptions domaine (EntityNotFound)
+│   │       │   ├── competitor_state.py    ← CompetitorState + CheckpointEntry (reconstruction depuis logs)
+│   │       │   ├── beacon_analyzer.py     ← Analyse des passages balises
+│   │       │   ├── section_validator.py   ← Validation des sections PH
+│   │       │   ├── results_calculator.py  ← Logique métier résultats (validité, finish, tri)
+│   │       │   ├── split_calculator.py    ← Extraction paires de balises + calcul des splits
+│   │       │   └── time_utils.py          ← Utilitaires temps
+│   │       ├── repositories/
+│   │       │   ├── event_repository.py    ← CRUD événements (objets typés)
+│   │       │   ├── template_repository.py ← CRUD templates (objets typés)
+│   │       │   ├── log_repository.py      ← Chargement + append logs (tri par creation_date)
+│   │       │   └── user_repository.py     ← CRUD utilisateurs (cache + persistance)
+│   │       └── schemas/
+│   │           ├── auth.py                ← TokenPayload / LoginRequest / LoginResponse
+│   │           ├── common.py             ← HealthResponse
+│   │           ├── templates.py           ← Beacon(is_ph) / Course / CourseDetail / Gate / CourseTimeGates / NameBody (=TemplateCreate=TemplateUpdate) / TemplateSummary / TemplateImportData
+│   │           ├── events.py             ← StartMode / EventRegistration / EventBeacon(Beacon) / EventCreate(=NameBody) / EventSummary / EventDetail / EventUpdate / ScheduleEntry / ScheduleResponse
+│   │           ├── registrations.py      ← RegistrationCreate / RegistrationDetail / RegistrationUpdate
+│   │           ├── users.py              ← User
+│   │           ├── results.py            ← BeaconResult / SectionResult / CompetitorResult / ResultsResponse
+│   │           ├── routechoices.py       ← RoutechoicesGpsRawResponse (payload brut)
+│   │           ├── splits.py             ← CompetitorSummary / SplitEntry / BeaconPairSplits / SplitsResponse
+│   │           ├── tracking.py           ← CompetitorTracking / TrackingResponse
+│   │           └── logs.py               ← Event sourcing : métadonnées (LogMetadata), entrées de log polymorphiques (discriminated union LogEntry), et schémas de requête client
 │   └── tests/
 │       ├── test_health.py
 │       ├── test_auth.py
@@ -357,7 +355,7 @@ o-suivi/
         ├── composables/
         │   ├── useAuth.ts             ← Auth composable (getAuthHeaders)
         │   ├── useClock.ts            ← Real-time clock (currentTime ref, auto tick/cleanup)
-        │   ├── useTimeGates.ts        ← PH time gate logic (elapsed, status, color, row class)
+        │   ├── useTimeGates.ts        ← PH time gate logic (elapsed, status, color, row class) + departure color classification (next/upcoming/waiting)
         │   ├── useBeaconEdit.ts       ← Inline beacon editing (inputs sync, hasChanged)
         │   ├── useBeaconSave.ts       ← Beacon save logic (API calls for checkpoint/PH edits)
         │   ├── useCompetitorActions.ts ← Suivi actions (abandon, tracker returned) + pending guard
@@ -368,10 +366,10 @@ o-suivi/
         │   ├── useOfflineStatus.ts    ← Offline status composable (online, syncing, pendingCount, syncNow)
         │   └── use-websocket.ts       ← WebSocket composable (connect, reconnect with backoff, visibility-aware)
         ├── router/
-        │   └── index.ts               ← Routes (/login, /admin, /admin/events/:id/config, /depart, /suivi) + auth guard
+        │   └── index.ts               ← Routes (/login, /admin, /admin/events/:id/config, /suivi) + auth guard + redirects (/depart, /resultats → /suivi)
         ├── components/
         │   ├── CreateModal.vue        ← Reusable creation popup (name field)
-        │   ├── EventHeader.vue        ← Shared sticky header (back + event name + Config/Départ/Suivi/Résultats nav)
+        │   ├── EventHeader.vue        ← Shared sticky header (back + event name + Config/Suivi nav)
         │   ├── ToastNotification.vue  ← Global toast notifications (auto-dismiss, error/success/info)
         │   ├── PromptModal.vue        ← Custom prompt modal (replaces browser prompt())
         │   ├── ReloadPrompt.vue       ← PWA update prompt (new SW version available → reload)
@@ -381,7 +379,7 @@ o-suivi/
         │   │   ├── BeaconEditTable.vue ← Inline beacon code/time editing table
         │   │   ├── CompetitorActions.vue ← Abandon + tracker buttons
         │   │   ├── CompetitorHistory.vue ← Modification history list
-│   │   └── SummaryCounters.vue ← Departed/in-course/arrived/DNS/abandon counters
+│   │   └── SummaryCounters.vue ← Waiting/departed/in-course/arrived/DNS/abandon counters
 │       └── views/
             ├── LoginView.vue          ← Login page (organizers)
             ├── public/
@@ -392,9 +390,7 @@ o-suivi/
             │   └── PublicEventsListView.vue ← Public events list (no auth, sorted by date)
             └── admin/
                 ├── AdminHomeView.vue  ← Admin home (tabs: Templates + Events)
-                ├── DepartView.vue     ← Departure management (clock, competitor list, inline editing, actions)
-                ├── SuiviView.vue      ← Tracking orchestrator (delegates to suivi/ sub-components)
-                ├── ResultatsView.vue  ← Results display view
+                ├── SuiviView.vue      ← Tracking + departure management (delegates to suivi/ sub-components + departure composables)
                 ├── EventConfigView.vue ← Event config (6 tabs shell + header)
                 ├── TemplateConfigView.vue ← Template config (3 tabs shell + header)
                 ├── event-tabs/

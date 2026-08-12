@@ -36,3 +36,11 @@ class RoutechoicesGpsRawResponse(BaseModel):
     payload: RoutechoicesEventDataRaw
 
 
+class GpsStatusEntry(BaseModel):
+    last_timestamp: str | None = None
+
+
+class GpsStatusResponse(BaseModel):
+    statuses: dict[str, GpsStatusEntry] = {}
+
+
