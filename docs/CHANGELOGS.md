@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-08-12
+
+- **GPS Polling** : implementation du polling GPS automatique via Routechoices. Tache asyncio en arriere-plan (60s), decodage PositionArchive (format 6-bit polyline), detection de proximite balises (Haversine, 25m), ecriture automatique des logs (`checkpoint_edit` / `ph_arrival_edit`, `author_id=gps`), broadcast WebSocket. Nouveaux fichiers : `gps_decoder.py`, `geo_utils.py`, `gps_polling_service.py`, `gps_polling_task.py`. Champ `gps_polling_enabled` sur EventDetail, champ `routechoices_short_name` sur EventRegistration. Frontend : toggle GPS dans GeneralTab, colonne RC Short Name dans ParticipantsTab. 27 tests GPS ajoutes, 204 passes total.
+- **Cohérence chronologique GPS** : ajout d'une garde à l'écriture (refuse un passage si son timestamp est antérieur à une balise précédente déjà renseignée) et d'un nettoyage post-polling (annule les checkpoints GPS dont le passage_time est incohérent avec l'ordre séquentiel). Seules les écritures GPS (`author_id=gps`) sont nettoyées. `CheckpointEntry` stocke désormais `author_id` via `apply_to()`. 4 tests ajoutés, 208 passes total.
+- **Fix : GPS decoder** : correction du decodeur PositionArchive qui utilisait `base64.b64decode()` au lieu du format 6-bit par caractere (Google Encoded Polyline : `ord(char)-63`, bit 5 = continuation, bits 0-4 = donnees).
+- **Fix : ScheduleTab ecrasait les registrations** : le save de l'onglet Horaires envoyait les registrations sans `routechoices_short_name` ni le vrai `tracker_number` (hardcode a `null`), ecrasant ces champs dans `event.json`. Correction du mapping pour preserver tous les champs.
+- **Logging GPS polling** : ajout de `logging.basicConfig` dans `main.py` pour rendre les logs `app.*` visibles dans uvicorn. Correction de `start_polling()` pour utiliser `asyncio.create_task()` au lieu du deprecie `asyncio.get_event_loop()`.
+
+---
+
 ## 2026-08-11
 
 - **Coordonnees de balises (templates + evenements)** : ajout d'un champ libre optionnel `coordinates` sur les balises (backend schemas + persistance JSON), ajout de la colonne editable "Coordonnees" dans les onglets Balises template/evenement, et propagation dans les balises enrichies des parcours. Tests backend templates/evenements mis a jour (45 passes) et tests frontend executes (100 passes).

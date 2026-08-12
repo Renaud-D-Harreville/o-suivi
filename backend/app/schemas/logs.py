@@ -179,6 +179,7 @@ class CheckpointLog(BaseLogEntry):
             sequence=self.data.sequence,
             code=self.data.code,
             passage_time=to_hms(self.metadata.creation_date),
+            author_id=self.metadata.author_id,
         )
 
 
@@ -193,6 +194,7 @@ class CheckpointEditLog(BaseLogEntry):
             sequence=self.data.sequence,
             code=self.data.code,
             passage_time=to_hms(self.data.passage_time),
+            author_id=self.metadata.author_id,
         )
 
 

@@ -11,6 +11,8 @@ interface Registration {
   course_number: number | null;
   start_order: number | null;
   start_time_planned: string | null;
+  tracker_number: string | null;
+  routechoices_short_name: string | null;
 }
 
 const props = defineProps<{ eventId: string }>();
@@ -101,7 +103,8 @@ async function handleSave() {
     course_number: s.course_number,
     start_order: s.order,
     start_time_planned: s.start_time_planned,
-    tracker_number: null,
+    tracker_number: s.tracker_number,
+    routechoices_short_name: s.routechoices_short_name,
   }));
 
   const payload = {

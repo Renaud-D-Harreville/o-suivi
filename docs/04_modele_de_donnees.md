@@ -293,6 +293,17 @@ Pour obtenir l'état actuel d'un inscrit, on relit le log, on le **trie dynamiqu
 - `dns_cancel` → annule le `dns`
 - `tracker_returned_cancel` → annule le `tracker_returned`
 
+### 5.1 `CheckpointEntry`
+
+Chaque checkpoint dans le `CompetitorState` contient :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `sequence` | `int` | Numéro de séquence de la balise |
+| `code` | `str \| None` | Code 2 lettres entré |
+| `passage_time` | `str \| None` | Horaire de passage (HH:MM:SS) |
+| `author_id` | `str \| None` | Identifiant de l'auteur du dernier log ayant modifié ce checkpoint (`"gps"`, UUID encadrant, etc.). Utilisé par le nettoyage GPS pour ne pas annuler les écritures manuelles. |
+
 ---
 
 ## 6. Résolution de conflits offline

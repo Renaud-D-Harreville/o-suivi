@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from app.domain.competitor_state import CompetitorState
 from app.domain.geo_utils import haversine_distance, parse_coordinates
 from app.domain.gps_decoder import GpsPoint, decode_position_archive
+from app.domain.time_utils import to_hms
 from app.repositories.event_repository import EventRepository
 from app.repositories.log_repository import LogRepository
 from app.schemas.events import EventBeacon, EventDetail, EventRegistration
@@ -115,31 +116,44 @@ class GpsPollingService:
         if not points:
             return
 
-        # Sort by timestamp ascending
         points.sort(key=lambda p: p.timestamp_ms)
 
-        # Reconstruct current state
         raw_logs = self._logs.load_raw(event.id, reg.user_id)
         state = CompetitorState.from_logs(raw_logs)
 
-        # Get course beacons
         course_beacons = self._events.get_course_beacons(event, reg.course_number)
         if not course_beacons:
             return
 
+        wrote_any = await self._detect_beacons(event.id, reg.user_id, state, course_beacons, points)
+
+        cleaned = await self._cleanup_inconsistencies(event.id, reg.user_id, state, course_beacons)
+
+        if wrote_any or cleaned:
+            await manager.broadcast_refresh(event.id)
+
+    # --- Detection (with chronological guard) ---
+
+    async def _detect_beacons(
+        self,
+        event_id: str,
+        user_id: str,
+        state: CompetitorState,
+        course_beacons: list[EventBeacon],
+        points: list[GpsPoint],
+    ) -> bool:
+        """Detect beacon passages with chronological guard. Returns True if any log was written."""
         wrote_any = False
         for idx, beacon in enumerate(course_beacons):
             seq = idx + 1
-            wrote = await self._check_beacon(event.id, reg.user_id, state, beacon, seq, points)
+            wrote = await self._check_beacon(event_id, user_id, state, beacon, seq, points)
             if wrote:
                 logger.info(
                     "GPS poll: wrote log for user %s, beacon seq=%d (%s)",
-                    reg.user_id, seq, beacon.tag,
+                    user_id, seq, beacon.tag,
                 )
                 wrote_any = True
-
-        if wrote_any:
-            await manager.broadcast_refresh(event.id)
+        return wrote_any
 
     async def _check_beacon(
         self,
@@ -151,7 +165,6 @@ class GpsPollingService:
         points: list[GpsPoint],
     ) -> bool:
         """Check a single beacon for GPS proximity. Returns True if a log was written."""
-        # Already has a passage_time → skip
         cp = state.checkpoints.get(sequence)
         if cp and cp.passage_time:
             return False
@@ -166,24 +179,44 @@ class GpsPollingService:
                 event_id, user_id, state, beacon, sequence, points, b_lat, b_lon
             )
         return await self._check_normal_beacon(
-            event_id, user_id, beacon, sequence, points, b_lat, b_lon
+            event_id, user_id, state, beacon, sequence, points, b_lat, b_lon
         )
+
+    def _max_previous_passage_time(self, state: CompetitorState, sequence: int) -> str | None:
+        """Return the latest passage_time among all checkpoints with seq < sequence."""
+        max_time: str | None = None
+        for seq, cp in state.checkpoints.items():
+            if seq < sequence and cp.passage_time:
+                if max_time is None or cp.passage_time > max_time:
+                    max_time = cp.passage_time
+        return max_time
+
+    def _is_chronologically_valid(self, passage_time_hms: str, state: CompetitorState, sequence: int) -> bool:
+        """Return True if passage_time is strictly after all previous checkpoints."""
+        max_prev = self._max_previous_passage_time(state, sequence)
+        if max_prev is None:
+            return True
+        return passage_time_hms > max_prev
 
     async def _check_normal_beacon(
         self,
         event_id: str,
         user_id: str,
+        state: CompetitorState,
         beacon: EventBeacon,
         sequence: int,
         points: list[GpsPoint],
         b_lat: float,
         b_lon: float,
     ) -> bool:
-        """Normal beacon: write checkpoint_edit at first point ≤ 25m."""
+        """Normal beacon: write checkpoint_edit at first point ≤ 25m (with chronological guard)."""
         for point in points:
             dist = haversine_distance(point.lat, point.lon, b_lat, b_lon)
             if dist <= _DETECTION_RADIUS_M:
                 passage_time = _timestamp_to_iso(point.timestamp_ms)
+                passage_hms = to_hms(passage_time)
+                if not passage_hms or not self._is_chronologically_valid(passage_hms, state, sequence):
+                    return False
                 entry = CheckpointEditLog(
                     metadata=_gps_metadata(passage_time),
                     data=CheckpointEditData(
@@ -193,6 +226,7 @@ class GpsPollingService:
                     ),
                 )
                 self._logs.append(event_id, user_id, entry)
+                entry.apply_to(state)
                 return True
         return False
 
@@ -207,29 +241,59 @@ class GpsPollingService:
         b_lat: float,
         b_lon: float,
     ) -> bool:
-        """PH beacon: ph_arrival_edit on entry, checkpoint_edit on exit."""
+        """PH beacon: ph_arrival_edit on entry (with guard), checkpoint_edit on exit (with guard)."""
         has_arrival = sequence in state.ph_arrivals
 
         if not has_arrival:
-            # Look for entry: first point ≤ 25m
-            for point in points:
-                dist = haversine_distance(point.lat, point.lon, b_lat, b_lon)
-                if dist <= _DETECTION_RADIUS_M:
-                    passage_time = _timestamp_to_iso(point.timestamp_ms)
-                    entry = PhArrivalEditLog(
-                        metadata=_gps_metadata(passage_time),
-                        data=PhArrivalEditData(
-                            sequence=sequence,
-                            passage_time=passage_time,
-                        ),
-                    )
-                    self._logs.append(event_id, user_id, entry)
-                    return True
-            return False
+            return await self._detect_ph_entry(
+                event_id, user_id, state, sequence, points, b_lat, b_lon
+            )
+        return await self._detect_ph_exit(
+            event_id, user_id, state, beacon, sequence, points, b_lat, b_lon
+        )
 
-        # Has arrival but no checkpoint → look for exit: first point > 25m after entry
-        # Find the entry timestamp from ph_arrivals to only look at points after entry
-        entry_time_hms = state.ph_arrivals[sequence]
+    async def _detect_ph_entry(
+        self,
+        event_id: str,
+        user_id: str,
+        state: CompetitorState,
+        sequence: int,
+        points: list[GpsPoint],
+        b_lat: float,
+        b_lon: float,
+    ) -> bool:
+        """Detect PH entry: first point ≤ 25m, with chronological guard."""
+        for point in points:
+            dist = haversine_distance(point.lat, point.lon, b_lat, b_lon)
+            if dist <= _DETECTION_RADIUS_M:
+                passage_time = _timestamp_to_iso(point.timestamp_ms)
+                passage_hms = to_hms(passage_time)
+                if not passage_hms or not self._is_chronologically_valid(passage_hms, state, sequence):
+                    return False
+                entry = PhArrivalEditLog(
+                    metadata=_gps_metadata(passage_time),
+                    data=PhArrivalEditData(
+                        sequence=sequence,
+                        passage_time=passage_time,
+                    ),
+                )
+                self._logs.append(event_id, user_id, entry)
+                entry.apply_to(state)
+                return True
+        return False
+
+    async def _detect_ph_exit(
+        self,
+        event_id: str,
+        user_id: str,
+        state: CompetitorState,
+        beacon: EventBeacon,
+        sequence: int,
+        points: list[GpsPoint],
+        b_lat: float,
+        b_lon: float,
+    ) -> bool:
+        """Detect PH exit: first point > 25m after entry, with chronological guard."""
         entered = False
         for point in points:
             dist = haversine_distance(point.lat, point.lon, b_lat, b_lon)
@@ -237,9 +301,11 @@ class GpsPollingService:
                 if dist <= _DETECTION_RADIUS_M:
                     entered = True
                 continue
-            # After entering, look for exit
             if dist > _DETECTION_RADIUS_M:
                 passage_time = _timestamp_to_iso(point.timestamp_ms)
+                passage_hms = to_hms(passage_time)
+                if not passage_hms or not self._is_chronologically_valid(passage_hms, state, sequence):
+                    return False
                 entry = CheckpointEditLog(
                     metadata=_gps_metadata(passage_time),
                     data=CheckpointEditData(
@@ -249,8 +315,56 @@ class GpsPollingService:
                     ),
                 )
                 self._logs.append(event_id, user_id, entry)
+                entry.apply_to(state)
                 return True
         return False
+
+
+    # --- Cleanup: remove GPS-written checkpoints that break chronological order ---
+
+    async def _cleanup_inconsistencies(
+        self,
+        event_id: str,
+        user_id: str,
+        state: CompetitorState,
+        course_beacons: list[EventBeacon],
+    ) -> bool:
+        """Remove GPS-authored checkpoints whose passage_time breaks chronological order."""
+        to_clear = self._find_inconsistent_gps_checkpoints(state, len(course_beacons))
+        for seq in to_clear:
+            self._write_clear_log(event_id, user_id, seq)
+            logger.info("GPS poll: cleaned inconsistent beacon seq=%d for user %s", seq, user_id)
+        return len(to_clear) > 0
+
+    def _find_inconsistent_gps_checkpoints(
+        self, state: CompetitorState, beacon_count: int,
+    ) -> list[int]:
+        """Return sequences of GPS-authored checkpoints that are out of chronological order."""
+        inconsistent: list[int] = []
+        for seq in range(1, beacon_count + 1):
+            cp = state.checkpoints.get(seq)
+            if not cp or not cp.passage_time:
+                continue
+            if cp.author_id != "gps":
+                continue
+            max_prev = self._max_previous_passage_time(state, seq)
+            if max_prev is not None and cp.passage_time < max_prev:
+                inconsistent.append(seq)
+        return inconsistent
+
+    def _write_clear_log(self, event_id: str, user_id: str, sequence: int) -> None:
+        """Write a checkpoint_edit with null passage_time and code to clear a false detection."""
+        entry = CheckpointEditLog(
+            metadata=_gps_metadata(
+                datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            ),
+            data=CheckpointEditData(
+                sequence=sequence,
+                code=None,
+                passage_time=None,
+            ),
+        )
+        self._logs.append(event_id, user_id, entry)
 
 
 def _gps_metadata(creation_date: str) -> LogMetadata:

@@ -11,6 +11,7 @@ class CheckpointEntry(BaseModel):
     sequence: int
     code: str | None = None
     passage_time: str | None = None
+    author_id: str | None = None
 
 
 class CompetitorState(BaseModel):

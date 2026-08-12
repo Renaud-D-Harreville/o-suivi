@@ -393,6 +393,21 @@ Format propriétaire Routechoices. Algorithme :
 - `ph_arrival_edit` : avec `sequence`, `passage_time` (timestamp GPS converti en HH:MM:SS)
 - **Pas de réécriture** : si un `passage_time` existe déjà pour une séquence, le GPS ne l'écrase pas
 
+##### Cohérence chronologique (garde + nettoyage)
+
+Le GPS peut détecter à tort une balise si le concurrent passe à proximité sans y aller (ex : il frôle la balise 2 en allant vers la balise 1). Deux mécanismes assurent la cohérence :
+
+**Étape A — Garde à l'écriture** : avant d'écrire un passage pour la séquence N, vérifier que le timestamp GPS est **strictement postérieur** aux `passage_time` de toutes les balises de séquences < N déjà renseignées. Si non → ne pas écrire. Cela n'exige pas que toutes les balises précédentes soient remplies (le concurrent peut en sauter une).
+
+**Étape B — Nettoyage après écriture** : après le polling d'un concurrent, parcourir les checkpoints renseignés et détecter les incohérences. Si une balise N a un `passage_time` antérieur à une balise M renseignée (avec M < N), alors N est une fausse détection → écrire un log d'annulation (`checkpoint_edit` avec `passage_time=null`, `code=null`). La même logique s'applique aux `ph_arrival_edit`.
+
+**Règle importante** : seules les écritures GPS (`author_id = "gps"`) peuvent être nettoyées. Les écritures manuelles (encadrants, public) ne sont jamais annulées automatiquement.
+
+Exemple :
+1. Cycle 1 : concurrent passe près de la balise 2 → GPS écrit la 2 (09:02). Pas de balise 1 → rien ne prouve que c'est faux.
+2. Cycle 2 : concurrent passe à la balise 1 → GPS écrit la 1 (09:05). Nettoyage : balise 2 (09:02) < balise 1 (09:05) → annulation de la balise 2.
+3. Cycle 3 : concurrent passe réellement à la balise 2 → GPS écrit la 2 (09:15). 09:15 > 09:05 → OK.
+
 #### Inscriptions (admin)
 
 | Méthode | Endpoint | Description |

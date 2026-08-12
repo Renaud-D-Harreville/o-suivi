@@ -18,6 +18,12 @@
 
 ## Decisions
 
+### 2026-08-12 — Cohérence chronologique GPS (garde + nettoyage)
+
+**Decision**: Le GPS polling applique deux mécanismes pour éviter les fausses détections de balises : (1) **Garde à l'écriture** — avant d'écrire un passage pour la séquence N, vérifier que le timestamp GPS est strictement postérieur aux `passage_time` de toutes les balises de séquences < N déjà renseignées ; (2) **Nettoyage** — après le polling d'un concurrent, parcourir les checkpoints et annuler (via `checkpoint_edit` avec `passage_time=null, code=null`) toute balise dont le `passage_time` est antérieur à celui d'une balise précédente déjà renseignée. Seules les écritures GPS (`author_id = "gps"`) sont nettoyées. Pour supporter cette vérification, `CheckpointEntry` dans `CompetitorState` stocke désormais `author_id`.
+**Reason**: Un concurrent peut passer à proximité d'une balise sans y aller (ex: frôler la balise 2 en allant vers la 1). Sans garde ni nettoyage, le GPS écrit un passage erroné qui fausse les résultats.
+**Impact**: `CompetitorState.CheckpointEntry` (nouveau champ `author_id`), `apply_to()` de `CheckpointLog`/`CheckpointEditLog`, `GpsPollingService._process_competitor()` (garde + nettoyage), `03_specifications_techniques.md`, `04_modele_de_donnees.md`.
+
 ### 2026-08-11 — GPS polling automatique avec matching par routechoices_short_name
 
 **Decision**: Implement automatic GPS polling: a background asyncio task runs every 60s, fetches Routechoices GPS data for events with `gps_polling_enabled = true`, decodes PositionArchive encoded_data, matches RC competitors to O-Suivi registrations by `short_name` ↔ `routechoices_short_name` (case-insensitive), detects beacon proximity (Haversine, 25m radius), and writes `checkpoint_edit`/`ph_arrival_edit` logs with `author_id = "gps"`. For PH beacons: entry = `ph_arrival_edit` (first point ≤ 25m), exit = `checkpoint_edit` (first point > 25m after entry). GPS also writes the beacon code if assigned. No overwrite if a passage_time already exists.

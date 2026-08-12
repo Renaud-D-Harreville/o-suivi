@@ -57,6 +57,20 @@ def _encode_two_points(
     )
 
 
+def _encode_three_points(
+    t1: int, lat1_e5: int, lon1_e5: int,
+    dt2: int, dlat2_e5: int, dlon2_e5: int,
+    dt3: int, dlat3_e5: int, dlon3_e5: int,
+) -> str:
+    """Encode three GPS points into 6-bit PositionArchive format."""
+    return (
+        _encode_two_points(t1, lat1_e5, lon1_e5, dt2, dlat2_e5, dlon2_e5)
+        + _to_6bit_chars(dt3)
+        + _to_6bit_chars(_zigzag_encode(dlat3_e5))
+        + _to_6bit_chars(_zigzag_encode(dlon3_e5))
+    )
+
+
 def _make_event(
     event_id: str = "evt1",
     beacons: list[dict] | None = None,
@@ -427,3 +441,201 @@ class TestGpsPollingMatching:
         assert not log_file.exists()
 
 
+
+class TestGpsPollingChronologicalGuard:
+    """GPS polling refuses to write a beacon whose timestamp is before a previous beacon."""
+
+    @pytest.mark.asyncio
+    async def test_guard_rejects_earlier_timestamp(self, tmp_path: Path) -> None:
+        """Beacon 2 detected at t=1000, beacon 1 at t=1060 → beacon 2 should NOT be written."""
+        b1 = {"id": 31, "number": 1, "tag": "B1", "is_ph": False, "code": "AA", "coordinates": "46.0,6.0"}
+        b2 = {"id": 32, "number": 2, "tag": "B2", "is_ph": False, "code": "BB", "coordinates": "46.001,6.0"}
+        reg = {"user_id": "u1", "course_number": 1, "routechoices_short_name": "test"}
+        event_data = _make_event(
+            beacons=[b1, b2],
+            courses=[{"number": 1, "beacons": [31, 32]}],
+            registrations=[reg],
+        )
+
+        # Point 1 near B2 at t=1000, point 2 near B1 at t=1060
+        # B1 at (46.0, 6.0), B2 at (46.001, 6.0) ≈ 111m apart
+        encoded = _encode_two_points(
+            t1=1000, lat1_e5=4600100, lon1_e5=600000,   # near B2 at t=1000
+            dt=60, dlat_e5=-100, dlon_e5=0,               # near B1 at t=1060
+        )
+
+        events_dir = tmp_path / "events"
+        _setup_event(events_dir, event_data)
+
+        event_repo = EventRepository()
+        event_repo._events_dir = events_dir
+        log_repo = LogRepository()
+        log_repo._events_dir = events_dir
+
+        rc_service = MagicMock(spec=RoutechoicesService)
+        rc_service.resolve_event_id.return_value = "rc_evt_1"
+        rc_service.fetch_event_payload.return_value = RoutechoicesEventDataRaw(
+            competitors=[RoutechoicesCompetitorRaw(id="c1", encoded_data=encoded, short_name="test")]
+        )
+
+        service = GpsPollingService(events=event_repo, logs=log_repo, rc=rc_service)
+        await service.poll_once()
+
+        log_file = events_dir / "evt1" / "logs" / "u1.json"
+        assert log_file.exists()
+        with log_file.open() as f:
+            logs = json.load(f)
+        # Only B1 should be written (seq=1). B2 at earlier timestamp should be rejected by guard.
+        checkpoint_edits = [l for l in logs if l["log_type"] == "checkpoint_edit" and l["data"].get("passage_time")]
+        assert len(checkpoint_edits) == 1
+        assert checkpoint_edits[0]["data"]["sequence"] == 1
+
+    @pytest.mark.asyncio
+    async def test_guard_allows_later_timestamp(self, tmp_path: Path) -> None:
+        """Beacon 1 at t=1000, beacon 2 at t=1060 → both should be written."""
+        b1 = {"id": 31, "number": 1, "tag": "B1", "is_ph": False, "code": "AA", "coordinates": "46.0,6.0"}
+        b2 = {"id": 32, "number": 2, "tag": "B2", "is_ph": False, "code": "BB", "coordinates": "46.001,6.0"}
+        reg = {"user_id": "u1", "course_number": 1, "routechoices_short_name": "test"}
+        event_data = _make_event(
+            beacons=[b1, b2],
+            courses=[{"number": 1, "beacons": [31, 32]}],
+            registrations=[reg],
+        )
+
+        # Point 1 near B1 at t=1000, point 2 near B2 at t=1060
+        encoded = _encode_two_points(
+            t1=1000, lat1_e5=4600000, lon1_e5=600000,   # near B1
+            dt=60, dlat_e5=100, dlon_e5=0,               # near B2
+        )
+
+        events_dir = tmp_path / "events"
+        _setup_event(events_dir, event_data)
+
+        event_repo = EventRepository()
+        event_repo._events_dir = events_dir
+        log_repo = LogRepository()
+        log_repo._events_dir = events_dir
+
+        rc_service = MagicMock(spec=RoutechoicesService)
+        rc_service.resolve_event_id.return_value = "rc_evt_1"
+        rc_service.fetch_event_payload.return_value = RoutechoicesEventDataRaw(
+            competitors=[RoutechoicesCompetitorRaw(id="c1", encoded_data=encoded, short_name="test")]
+        )
+
+        service = GpsPollingService(events=event_repo, logs=log_repo, rc=rc_service)
+        await service.poll_once()
+
+        log_file = events_dir / "evt1" / "logs" / "u1.json"
+        with log_file.open() as f:
+            logs = json.load(f)
+        checkpoint_edits = [l for l in logs if l["log_type"] == "checkpoint_edit" and l["data"].get("passage_time")]
+        assert len(checkpoint_edits) == 2
+
+
+class TestGpsPollingCleanup:
+    """GPS polling cleans up inconsistent GPS-authored checkpoints."""
+
+    @pytest.mark.asyncio
+    async def test_cleanup_removes_earlier_gps_checkpoint(self, tmp_path: Path) -> None:
+        """B2 was written by GPS at 09:02. Now B1 is written at 09:05. B2 should be cleared."""
+        b1 = {"id": 31, "number": 1, "tag": "B1", "is_ph": False, "code": "AA", "coordinates": "46.0,6.0"}
+        b2 = {"id": 32, "number": 2, "tag": "B2", "is_ph": False, "code": "BB", "coordinates": "46.001,6.0"}
+        reg = {"user_id": "u1", "course_number": 1, "routechoices_short_name": "test"}
+        event_data = _make_event(
+            beacons=[b1, b2],
+            courses=[{"number": 1, "beacons": [31, 32]}],
+            registrations=[reg],
+        )
+
+        events_dir = tmp_path / "events"
+        _setup_event(events_dir, event_data)
+
+        # Pre-existing GPS log: B2 at 09:02
+        existing_log = [{
+            "log_type": "checkpoint_edit",
+            "metadata": {"creation_date": "2026-08-01T09:02:00", "received_at": "2026-08-01T09:02:01", "author_id": "gps"},
+            "data": {"sequence": 2, "code": "BB", "passage_time": "09:02:00"},
+        }]
+        log_dir = events_dir / "evt1" / "logs"
+        with (log_dir / "u1.json").open("w") as f:
+            json.dump(existing_log, f)
+
+        # GPS point near B1 at 09:05 → t = 9*3600 + 5*60 = 32700 seconds since YEAR2010
+        encoded = _encode_single_point(32700, 4600000, 600000)
+
+        event_repo = EventRepository()
+        event_repo._events_dir = events_dir
+        log_repo = LogRepository()
+        log_repo._events_dir = events_dir
+
+        rc_service = MagicMock(spec=RoutechoicesService)
+        rc_service.resolve_event_id.return_value = "rc_evt_1"
+        rc_service.fetch_event_payload.return_value = RoutechoicesEventDataRaw(
+            competitors=[RoutechoicesCompetitorRaw(id="c1", encoded_data=encoded, short_name="test")]
+        )
+
+        service = GpsPollingService(events=event_repo, logs=log_repo, rc=rc_service)
+        await service.poll_once()
+
+        with (log_dir / "u1.json").open() as f:
+            logs = json.load(f)
+
+        # Should have: original B2, new B1, and a clear log for B2
+        assert len(logs) == 3
+        # Last log should clear B2
+        clear_log = logs[2]
+        assert clear_log["log_type"] == "checkpoint_edit"
+        assert clear_log["data"]["sequence"] == 2
+        assert clear_log["data"]["passage_time"] is None
+        assert clear_log["data"]["code"] is None
+        assert clear_log["metadata"]["author_id"] == "gps"
+
+    @pytest.mark.asyncio
+    async def test_cleanup_does_not_touch_manual_checkpoint(self, tmp_path: Path) -> None:
+        """B2 was written by an organizer at 09:02. B1 is written by GPS at 09:05. B2 must NOT be cleared."""
+        b1 = {"id": 31, "number": 1, "tag": "B1", "is_ph": False, "code": "AA", "coordinates": "46.0,6.0"}
+        b2 = {"id": 32, "number": 2, "tag": "B2", "is_ph": False, "code": "BB", "coordinates": "46.001,6.0"}
+        reg = {"user_id": "u1", "course_number": 1, "routechoices_short_name": "test"}
+        event_data = _make_event(
+            beacons=[b1, b2],
+            courses=[{"number": 1, "beacons": [31, 32]}],
+            registrations=[reg],
+        )
+
+        events_dir = tmp_path / "events"
+        _setup_event(events_dir, event_data)
+
+        # Pre-existing MANUAL log: B2 at 09:02 by organizer (not GPS)
+        existing_log = [{
+            "log_type": "checkpoint_edit",
+            "metadata": {"creation_date": "2026-08-01T09:02:00", "received_at": "2026-08-01T09:02:01", "author_id": "usr_001"},
+            "data": {"sequence": 2, "code": "BB", "passage_time": "09:02:00"},
+        }]
+        log_dir = events_dir / "evt1" / "logs"
+        with (log_dir / "u1.json").open("w") as f:
+            json.dump(existing_log, f)
+
+        # GPS point near B1 at 09:05 → t = 32700
+        encoded = _encode_single_point(32700, 4600000, 600000)
+
+        event_repo = EventRepository()
+        event_repo._events_dir = events_dir
+        log_repo = LogRepository()
+        log_repo._events_dir = events_dir
+
+        rc_service = MagicMock(spec=RoutechoicesService)
+        rc_service.resolve_event_id.return_value = "rc_evt_1"
+        rc_service.fetch_event_payload.return_value = RoutechoicesEventDataRaw(
+            competitors=[RoutechoicesCompetitorRaw(id="c1", encoded_data=encoded, short_name="test")]
+        )
+
+        service = GpsPollingService(events=event_repo, logs=log_repo, rc=rc_service)
+        await service.poll_once()
+
+        with (log_dir / "u1.json").open() as f:
+            logs = json.load(f)
+
+        # Should have: original B2 (manual) + new B1 (GPS). NO clear log for B2.
+        assert len(logs) == 2
+        assert logs[0]["data"]["sequence"] == 2  # original manual
+        assert logs[1]["data"]["sequence"] == 1  # new GPS B1
