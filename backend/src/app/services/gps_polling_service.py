@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 from app.domain.competitor_state import CompetitorState
 from app.domain.geo_utils import haversine_distance, parse_coordinates
@@ -30,6 +31,9 @@ from app.websocket.connection_manager import manager
 logger = logging.getLogger(__name__)
 
 _DETECTION_RADIUS_M = 25.0
+
+
+_PARIS_TZ = ZoneInfo("Europe/Paris")
 
 
 class GpsPollingService:
@@ -121,6 +125,16 @@ class GpsPollingService:
         raw_logs = self._logs.load_raw(event.id, reg.user_id)
         state = CompetitorState.from_logs(raw_logs)
 
+        if not state.departed or not state.departure_time:
+            return
+
+        departure_dt = self._parse_departure_time(event, state.departure_time)
+        if departure_dt:
+            departure_ms = int(departure_dt.timestamp() * 1000)
+            points = [p for p in points if p.timestamp_ms >= departure_ms]
+            if not points:
+                return
+
         course_beacons = self._events.get_course_beacons(event, reg.course_number)
         if not course_beacons:
             return
@@ -131,6 +145,20 @@ class GpsPollingService:
 
         if wrote_any or cleaned:
             await manager.broadcast_refresh(event.id)
+
+    def _parse_departure_time(self, event: EventDetail, departure_time: str) -> datetime | None:
+        """Convert a departure_time (HH:MM:SS) to a timezone-aware datetime using the event date."""
+        try:
+            time_parts = departure_time.split(":")
+            h, m = int(time_parts[0]), int(time_parts[1])
+            s = int(time_parts[2]) if len(time_parts) > 2 else 0
+            event_date = event.date if event.date else None
+            if event_date:
+                year, month, day = (int(x) for x in event_date.split("-"))
+                return datetime(year, month, day, h, m, s, tzinfo=_PARIS_TZ)
+            return None
+        except (ValueError, IndexError, AttributeError):
+            return None
 
     # --- Detection (with chronological guard) ---
 
@@ -356,7 +384,7 @@ class GpsPollingService:
         """Write a checkpoint_edit with null passage_time and code to clear a false detection."""
         entry = CheckpointEditLog(
             metadata=_gps_metadata(
-                datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                datetime.now(_PARIS_TZ).isoformat(timespec="seconds"),
             ),
             data=CheckpointEditData(
                 sequence=sequence,
@@ -371,14 +399,14 @@ def _gps_metadata(creation_date: str) -> LogMetadata:
     """Build log metadata for a GPS-originated entry."""
     return LogMetadata(
         creation_date=creation_date,
-        received_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        received_at=datetime.now(_PARIS_TZ).isoformat(timespec="seconds"),
         author_id="gps",
     )
 
 
 def _timestamp_to_iso(timestamp_ms: int) -> str:
-    """Convert a Unix timestamp in milliseconds to ISO 8601 string."""
-    return datetime.fromtimestamp(timestamp_ms / 1000, tz=timezone.utc).isoformat(timespec="seconds")
+    """Convert a Unix timestamp in milliseconds to ISO 8601 string in Europe/Paris timezone."""
+    return datetime.fromtimestamp(timestamp_ms / 1000, tz=_PARIS_TZ).isoformat(timespec="seconds")
 
 
 

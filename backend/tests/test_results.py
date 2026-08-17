@@ -88,12 +88,12 @@ def test_results_full_valid_run() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:20:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:40:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T07:55:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:10:00Z"}},
     ])
     resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
     comp = resp.json()["competitors"][0]
@@ -110,12 +110,12 @@ def test_results_invalid_code() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "XX"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "XX", "passage_time": "2026-09-15T07:20:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:40:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T07:55:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:10:00Z"}},
     ])
     resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
     comp = resp.json()["competitors"][0]
@@ -129,12 +129,12 @@ def test_results_over_time() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:30:00Z", "received_at": "2026-09-15T07:30:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:50:00Z", "received_at": "2026-09-15T07:50:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:20:00Z", "received_at": "2026-09-15T08:20:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:35:00Z", "received_at": "2026-09-15T08:35:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:50:00Z", "received_at": "2026-09-15T08:50:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:30:00Z", "received_at": "2026-09-15T07:30:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:30:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:50:00Z", "received_at": "2026-09-15T07:50:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:50:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:20:00Z", "received_at": "2026-09-15T08:20:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T08:20:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:35:00Z", "received_at": "2026-09-15T08:35:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T08:35:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:50:00Z", "received_at": "2026-09-15T08:50:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:50:00Z"}},
     ])
     resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
     comp = resp.json()["competitors"][0]
@@ -153,21 +153,21 @@ def test_results_sort_order() -> None:
 
     # Alice arrives at 08:30
     _write_logs(eid, uid1, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid1}, "data": {"sequence": 1, "code": "AB"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid1}, "data": {"sequence": 2, "code": "CD"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid1}, "data": {"sequence": 3, "code": "EF"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid1}, "data": {"sequence": 4, "code": "GH"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:30:00Z", "received_at": "2026-09-15T08:30:01Z", "author_id": uid1}, "data": {"sequence": 5, "code": "IJ"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid1}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid1}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:20:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid1}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:40:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid1}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T07:55:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:30:00Z", "received_at": "2026-09-15T08:30:01Z", "author_id": uid1}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:30:00Z"}},
     ])
     # Bob arrives at 08:10 (earlier)
     _write_logs(eid, uid2, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:02:00Z", "received_at": "2026-09-15T07:02:01Z", "author_id": "usr_001"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:12:00Z", "received_at": "2026-09-15T07:12:01Z", "author_id": uid2}, "data": {"sequence": 1, "code": "AB"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:22:00Z", "received_at": "2026-09-15T07:22:01Z", "author_id": uid2}, "data": {"sequence": 2, "code": "CD"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:42:00Z", "received_at": "2026-09-15T07:42:01Z", "author_id": uid2}, "data": {"sequence": 3, "code": "EF"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:52:00Z", "received_at": "2026-09-15T07:52:01Z", "author_id": uid2}, "data": {"sequence": 4, "code": "GH"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid2}, "data": {"sequence": 5, "code": "IJ"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:02:00Z", "received_at": "2026-09-15T07:02:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:02:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:12:00Z", "received_at": "2026-09-15T07:12:01Z", "author_id": uid2}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:12:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:22:00Z", "received_at": "2026-09-15T07:22:01Z", "author_id": uid2}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:22:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:42:00Z", "received_at": "2026-09-15T07:42:01Z", "author_id": uid2}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:42:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:52:00Z", "received_at": "2026-09-15T07:52:01Z", "author_id": uid2}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T07:52:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid2}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:10:00Z"}},
     ])
     # Charlie is DNS
     _write_logs(eid, uid3, [
@@ -198,10 +198,10 @@ def test_results_abandoned() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD"}},
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:20:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:40:00Z"}},
         {"log_type": "abandon", "metadata": {"creation_date": "2026-09-15T07:50:00Z", "received_at": "2026-09-15T07:50:01Z", "author_id": "usr_001"}, "data": {"comment": "Injury"}},
     ])
     resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
@@ -226,9 +226,9 @@ def test_results_cleared_checkpoint_shows_no_validity() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
         # Enter code AB for beacon 1
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
         # Then clear it (checkpoint_edit with null code and null passage_time)
         {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:15:00Z", "received_at": "2026-09-15T07:15:01Z", "author_id": "usr_001"}, "data": {"sequence": 1, "code": None, "passage_time": None}},
     ])
@@ -245,9 +245,9 @@ def test_results_cleared_code_with_time_shows_no_validity() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
         # Enter code AB + time for beacon 1
-        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
         # Edit: clear code but keep time
         {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:15:00Z", "received_at": "2026-09-15T07:15:01Z", "author_id": "usr_001"}, "data": {"sequence": 1, "code": None, "passage_time": "2026-09-15T07:10:00Z"}},
     ])
@@ -256,5 +256,56 @@ def test_results_cleared_code_with_time_shows_no_validity() -> None:
     # Code cleared but time exists → valid should be None (no code to compare)
     assert comp["beacons"][0]["valid"] is None
     assert comp["beacons"][0]["entered_code"] is None
+
+
+def test_results_out_of_order_beacons_invalidates_section() -> None:
+    """Beacons validated out of chronological order should invalidate the section."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _register(token, eid)
+    # Beacons 1, 2 are in section 1 (before PH1 at seq 3).
+    # We give beacon 2 an EARLIER time than beacon 1 → out-of-order.
+    _write_logs(eid, uid, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:20:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:10:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:40:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T07:55:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:10:00Z"}},
+    ])
+    resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
+    comp = resp.json()["competitors"][0]
+    # Section 1 (beacons 1-2 + PH1) should be invalid due to out-of-order passages
+    assert comp["sections"][0]["valid"] is False
+    # Section 2 (beacon 4 + PH2) should still be valid (in-order)
+    assert comp["sections"][1]["valid"] is True
+    # Global should be False (at least one section invalid)
+    assert comp["valid_global"] is False
+
+
+def test_results_section_time_breakdown() -> None:
+    """Section results should include section_time, running_time and pause_time."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _register(token, eid)
+    # Departure 07:00, PH1 arrival at 07:35, PH1 validation (checkpoint seq 3) at 07:40
+    # → section_time = 40min (departure to validation) = 2400s
+    # → running_time = 35min (departure to ph_arrival) = 2100s
+    # → pause_time = 5min (ph_arrival to validation) = 300s
+    _write_logs(eid, uid, [
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00Z", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:10:00Z", "received_at": "2026-09-15T07:10:01Z", "author_id": uid}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:20:00Z", "received_at": "2026-09-15T07:20:01Z", "author_id": uid}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:20:00Z"}},
+        {"log_type": "ph_arrival", "metadata": {"creation_date": "2026-09-15T07:35:00Z", "received_at": "2026-09-15T07:35:01Z", "author_id": uid}, "data": {"sequence": 3, "passage_time": "2026-09-15T07:35:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:40:00Z", "received_at": "2026-09-15T07:40:01Z", "author_id": uid}, "data": {"sequence": 3, "code": "EF", "passage_time": "2026-09-15T07:40:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T07:55:00Z", "received_at": "2026-09-15T07:55:01Z", "author_id": uid}, "data": {"sequence": 4, "code": "GH", "passage_time": "2026-09-15T07:55:00Z"}},
+        {"log_type": "checkpoint", "metadata": {"creation_date": "2026-09-15T08:10:00Z", "received_at": "2026-09-15T08:10:01Z", "author_id": uid}, "data": {"sequence": 5, "code": "IJ", "passage_time": "2026-09-15T08:10:00Z"}},
+    ])
+    resp = client.get(f"/api/events/{eid}/resultats", headers=_headers(token))
+    comp = resp.json()["competitors"][0]
+    s1 = comp["sections"][0]
+    assert s1["section_time"] == 2400  # 40 minutes
+    assert s1["running_time"] == 2100  # 35 minutes
+    assert s1["pause_time"] == 300  # 5 minutes
 
 

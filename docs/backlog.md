@@ -110,17 +110,11 @@ Problèmes :
 
 > Incohérences ou problèmes techniques identifiés lors de la review, à corriger.
 
-### Bug : `CheckpointLog.apply_to()` utilise `creation_date` comme `passage_time`
+### ✅ Bug : `CheckpointLog.apply_to()` utilise `creation_date` comme `passage_time` (corrigé 2026-08-14)
 
-**Fichier** : `backend/app/schemas/logs.py`, lignes 171-182
+**Fichier** : `backend/app/schemas/logs.py`
 
-**Problème** : `CheckpointLog.apply_to()` fait `passage_time=to_hms(self.metadata.creation_date)`. Or un concurrent peut saisir son code balise bien après y être passé (ex : zone sans réseau, oubli, saisie groupée en fin de parcours). L'heure de saisie (`creation_date`) n'est PAS l'heure de passage réelle (`passage_time`). Ce sont deux concepts distincts :
-- `creation_date` = quand l'action de saisie a eu lieu (horloge client)
-- `passage_time` = quand le concurrent est réellement passé à la balise (donnée métier)
-
-**Impact** : tous les `checkpoint` logs (saisie par le stagiaire) utilisent l'heure de saisie comme heure de passage, ce qui peut être faux.
-
-**À corriger** : le `CheckpointLog` devrait porter un champ `passage_time` explicite dans sa `data` (comme `CheckpointEditLog`), ou a minima permettre de dissocier les deux notions. Nécessite une réflexion sur le flow côté frontend (le stagiaire doit-il renseigner l'heure de passage en plus du code ?).
+**Corrigé** : `CheckpointData`, `PhArrivalData` portent un `passage_time` optionnel. `DepartureLog` porte un `DepartureData` avec `departure_time`. Les 3 `apply_to()` utilisent `self.data.*`. Documentation et tests adaptés.
 
 ### CORS middleware
 
@@ -150,28 +144,3 @@ Configurer les origines autorisées via variable d'environnement.
 Le mécanisme de skip de balises doit être accessible depuis la vue Suivi (côté encadrant), en plus de l'interface stagiaire. Il faut ajouter un bouton/champ dans le dépliant d'un concurrent (vue Suivi §4) qui permette à l'encadrant de skip des balises pour le compte d'un stagiaire.
 
 
-
-
-## Réversibilité et mécanisme des balises sautées
-
-- ✅ **Corrigé** (2026-07-27) : le skip est désormais balise par balise, réversible, avec `{ sequence }` dans le log. Les docs `espace_stagiaire.md`, `04_modele_de_donnees.md` et `03_specifications_techniques.md` ont été mis à jour.
-
----
-
-## Vues à spécifier
-
-### Vue Login (encadrants)
-
-Page de connexion encadrant (`/login`). À spécifier : champs (pseudo + mot de passe), gestion d'erreur, design, lien retour vers l'événement si le stagiaire s'est trompé.
-
-### Vue Sélection du nom (stagiaires)
-
-Page de sélection du nom stagiaire (`/event/:id_event`). À spécifier : affichage de la liste des participants, recherche/filtrage, sélection, génération du JWT, bouton "Je suis encadrant" → `/login`.
-
-### Consignes de sécurité (champ données)
-
-`espace_stagiaire.md` §5.6.3 mentionne des "consignes globales de sécurité" affichées au stagiaire, mais aucun champ correspondant n'existe dans la configuration de l'événement. Il faudra ajouter un champ texte libre (ou un lien vers un document) dans l'onglet Général de l'événement pour permettre aux encadrants de saisir ces consignes.
-
-### Suppression de la date dans les timestamps de passage
-
-- ✅ **Fait** (2026-08-07) : les `passage_time`, `departure_time` et `ph_arrivals` sont désormais en format `HH:MM:SS` pur. Le backend normalise via `to_hms()`, le frontend envoie/reçoit directement en HH:MM:SS.

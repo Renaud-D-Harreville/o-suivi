@@ -4,6 +4,13 @@
 
 ---
 
+## 2026-08-14
+
+- **Fix : séparation stricte creation_date / passage_time** : suppression de toute confusion entre `creation_date` (horloge client au moment de l'action) et `passage_time` / `departure_time` (données métier). `CheckpointData` et `PhArrivalData` portent désormais un champ `passage_time` optionnel. Nouveau `DepartureData` avec `departure_time` explicite. Les 3 `apply_to()` (`CheckpointLog`, `PhArrivalLog`, `DepartureLog`) utilisent `self.data.*` et non `self.metadata.creation_date`. Backward compat : les anciens `DepartureLog` sans `data` sont parsés avec `departure_time=None`. Frontend adapté (`competitor-state.ts`, `useDepartureActions.ts`). Documentation corrigée (`04_modele_de_donnees.md`, `skills.md`). Tous les tests adaptés. 208 backend, 100 frontend passes.
+- **Fix : timestamps GPS en UTC au lieu de l'heure française** : `_timestamp_to_iso()` et `_gps_metadata()` dans `gps_polling_service.py` utilisent désormais `ZoneInfo("Europe/Paris")` au lieu de `timezone.utc`. Les horaires de passage GPS étaient 2h trop tôt en été (1h en hiver).
+
+---
+
 ## 2026-08-12
 
 - **Fusion Depart + Suivi** : la vue Depart est fusionnee dans la vue Suivi. Le bouton DEPART apparait dans la banniere de chaque concurrent non parti. Les champs editables (horaire prevu, depart reel, parcours, tracker, poids sac) et les actions (DNS, annulation) sont dans le depliant. Le contenu suivi (PH, balises, abandon, tracker, historique) n'apparait que pour les concurrents partis. Couleurs depart (vert prochain, orange suivant) appliquees aux non-partis via `useTimeGates`. Compteur "En attente" ajoute dans SummaryCounters. Historique elargi avec les types de log depart (departure, dns, bag_weight, registration_edit). Navigation reduite a 2 onglets (Config, Suivi). Routes `/depart` et `/resultats` redirigent vers `/suivi`. Vue admin ResultatsView supprimee (vue publique conservee). Docs mises a jour : suivi.md reecrit, depart.md et resultats.md supprimes, CDC et events/_overview.md mis a jour.

@@ -34,7 +34,10 @@ class LogRepository:
         return _LOG_LIST_ADAPTER.validate_python(raw)
 
     def append(self, event_id: str, user_id: str, entry: BaseLogEntry) -> None:
-        """Append a typed log entry to the user's log file."""
+        """Append a typed log entry to the user's log file.
+
+        Deduplication: if an entry with the same creation_date + log_type already exists, skip.
+        """
         log_file = self._log_file(event_id, user_id)
         if log_file.exists():
             with log_file.open() as f:
@@ -42,7 +45,17 @@ class LogRepository:
         else:
             log_file.parent.mkdir(parents=True, exist_ok=True)
             logs = []
-        logs.append(entry.model_dump())
+
+        new_entry = entry.model_dump()
+        new_cd = new_entry.get("metadata", {}).get("creation_date", "")
+        new_type = new_entry.get("log_type", "")
+        for existing in logs:
+            existing_cd = existing.get("metadata", {}).get("creation_date", "")
+            existing_type = existing.get("log_type", "")
+            if existing_cd == new_cd and existing_type == new_type:
+                return
+
+        logs.append(new_entry)
         with log_file.open("w") as f:
             json.dump(logs, f, indent=2, ensure_ascii=False)
 

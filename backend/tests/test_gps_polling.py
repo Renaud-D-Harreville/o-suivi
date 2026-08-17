@@ -113,6 +113,28 @@ def _setup_event(events_dir: Path, event_data: dict) -> None:
         json.dump(raw, f, indent=2)
 
 
+def _write_departure_log(events_dir: Path, event_id: str, user_id: str, departure_time: str = "07:30:00") -> None:
+    """Write a departure log so the competitor is considered departed."""
+    log_dir = events_dir / event_id / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / f"{user_id}.json"
+    logs = []
+    if log_file.exists():
+        with log_file.open() as f:
+            logs = json.load(f)
+    logs.append({
+        "log_type": "departure",
+        "metadata": {
+            "creation_date": "2026-08-01T07:30:00",
+            "received_at": "2026-08-01T07:30:00",
+            "author_id": "admin",
+        },
+        "data": {"departure_time": departure_time},
+    })
+    with log_file.open("w") as f:
+        json.dump(logs, f)
+
+
 # --- Tests ---
 
 
@@ -136,6 +158,7 @@ class TestGpsPollingNormalBeacon:
 
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
+        _write_departure_log(events_dir, "evt1", "u1")
 
         event_repo = EventRepository()
         event_repo._events_dir = events_dir
@@ -159,11 +182,11 @@ class TestGpsPollingNormalBeacon:
         assert log_file.exists()
         with log_file.open() as f:
             logs = json.load(f)
-        assert len(logs) == 1
-        assert logs[0]["log_type"] == "checkpoint_edit"
-        assert logs[0]["data"]["sequence"] == 1
-        assert logs[0]["data"]["code"] == "AB"
-        assert logs[0]["metadata"]["author_id"] == "gps"
+        assert len(logs) == 2
+        assert logs[1]["log_type"] == "checkpoint_edit"
+        assert logs[1]["data"]["sequence"] == 1
+        assert logs[1]["data"]["code"] == "AB"
+        assert logs[1]["metadata"]["author_id"] == "gps"
 
     @pytest.mark.asyncio
     async def test_no_write_when_outside_radius(self, tmp_path: Path) -> None:
@@ -181,6 +204,7 @@ class TestGpsPollingNormalBeacon:
 
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
+        _write_departure_log(events_dir, "evt1", "u1")
 
         event_repo = EventRepository()
         event_repo._events_dir = events_dir
@@ -200,7 +224,10 @@ class TestGpsPollingNormalBeacon:
         await service.poll_once()
 
         log_file = events_dir / "evt1" / "logs" / "u1.json"
-        assert not log_file.exists()
+        assert log_file.exists()
+        with log_file.open() as f:
+            logs = json.load(f)
+        assert len(logs) == 1  # Only the departure log, no beacon detection
 
     @pytest.mark.asyncio
     async def test_no_overwrite_existing_passage_time(self, tmp_path: Path) -> None:
@@ -216,20 +243,31 @@ class TestGpsPollingNormalBeacon:
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
 
-        # Pre-existing log with passage_time
-        existing_log = [{
-            "log_type": "checkpoint_edit",
-            "metadata": {
-                "creation_date": "2026-08-01T09:00:00",
-                "received_at": "2026-08-01T09:00:01",
-                "author_id": "manual",
-            },
-            "data": {"sequence": 1, "code": "AB", "passage_time": "09:00:00"},
-        }]
+        # Pre-existing logs: departure + checkpoint with passage_time
         log_dir = events_dir / "evt1" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
+        existing_logs = [
+            {
+                "log_type": "departure",
+                "metadata": {
+                    "creation_date": "2026-08-01T07:30:00",
+                    "received_at": "2026-08-01T07:30:00",
+                    "author_id": "admin",
+                },
+                "data": {"departure_time": "07:30:00"},
+            },
+            {
+                "log_type": "checkpoint_edit",
+                "metadata": {
+                    "creation_date": "2026-08-01T09:00:00",
+                    "received_at": "2026-08-01T09:00:01",
+                    "author_id": "manual",
+                },
+                "data": {"sequence": 1, "code": "AB", "passage_time": "09:00:00"},
+            },
+        ]
         with (log_dir / "u1.json").open("w") as f:
-            json.dump(existing_log, f)
+            json.dump(existing_logs, f)
 
         # GPS point right on top of beacon
         encoded = _encode_single_point(1000, 4600000, 600000)
@@ -251,10 +289,10 @@ class TestGpsPollingNormalBeacon:
         service = GpsPollingService(events=event_repo, logs=log_repo, rc=rc_service)
         await service.poll_once()
 
-        # Should still have only 1 log (the original)
+        # Should still have only 2 logs (departure + original checkpoint)
         with (log_dir / "u1.json").open() as f:
             logs = json.load(f)
-        assert len(logs) == 1
+        assert len(logs) == 2
 
 
 class TestGpsPollingPhBeacon:
@@ -276,6 +314,7 @@ class TestGpsPollingPhBeacon:
 
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
+        _write_departure_log(events_dir, "evt1", "u1")
 
         event_repo = EventRepository()
         event_repo._events_dir = events_dir
@@ -298,10 +337,10 @@ class TestGpsPollingPhBeacon:
         assert log_file.exists()
         with log_file.open() as f:
             logs = json.load(f)
-        assert len(logs) == 1
-        assert logs[0]["log_type"] == "ph_arrival_edit"
-        assert logs[0]["data"]["sequence"] == 1
-        assert logs[0]["metadata"]["author_id"] == "gps"
+        assert len(logs) == 2
+        assert logs[1]["log_type"] == "ph_arrival_edit"
+        assert logs[1]["data"]["sequence"] == 1
+        assert logs[1]["metadata"]["author_id"] == "gps"
 
     @pytest.mark.asyncio
     async def test_writes_checkpoint_on_exit(self, tmp_path: Path) -> None:
@@ -317,16 +356,27 @@ class TestGpsPollingPhBeacon:
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
 
-        # Pre-existing ph_arrival_edit log
-        existing_log = [{
-            "log_type": "ph_arrival_edit",
-            "metadata": {
-                "creation_date": "2026-08-01T09:00:00",
-                "received_at": "2026-08-01T09:00:01",
-                "author_id": "gps",
+        # Pre-existing logs: departure + ph_arrival_edit
+        existing_log = [
+            {
+                "log_type": "departure",
+                "metadata": {
+                    "creation_date": "2026-08-01T07:30:00",
+                    "received_at": "2026-08-01T07:30:00",
+                    "author_id": "admin",
+                },
+                "data": {"departure_time": "07:30:00"},
             },
-            "data": {"sequence": 1, "passage_time": "09:00:00"},
-        }]
+            {
+                "log_type": "ph_arrival_edit",
+                "metadata": {
+                    "creation_date": "2026-08-01T09:00:00",
+                    "received_at": "2026-08-01T09:00:01",
+                    "author_id": "gps",
+                },
+                "data": {"sequence": 1, "passage_time": "09:00:00"},
+            },
+        ]
         log_dir = events_dir / "evt1" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         with (log_dir / "u1.json").open("w") as f:
@@ -357,11 +407,12 @@ class TestGpsPollingPhBeacon:
 
         with (log_dir / "u1.json").open() as f:
             logs = json.load(f)
-        assert len(logs) == 2
-        assert logs[0]["log_type"] == "ph_arrival_edit"
-        assert logs[1]["log_type"] == "checkpoint_edit"
-        assert logs[1]["data"]["code"] == "PH"
-        assert logs[1]["data"]["sequence"] == 1
+        assert len(logs) == 3
+        assert logs[0]["log_type"] == "departure"
+        assert logs[1]["log_type"] == "ph_arrival_edit"
+        assert logs[2]["log_type"] == "checkpoint_edit"
+        assert logs[2]["data"]["code"] == "PH"
+        assert logs[2]["data"]["sequence"] == 1
 
 
 class TestGpsPollingMatching:
@@ -382,6 +433,7 @@ class TestGpsPollingMatching:
 
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
+        _write_departure_log(events_dir, "evt1", "u1")
 
         event_repo = EventRepository()
         event_repo._events_dir = events_dir
@@ -403,6 +455,9 @@ class TestGpsPollingMatching:
 
         log_file = events_dir / "evt1" / "logs" / "u1.json"
         assert log_file.exists()
+        with log_file.open() as f:
+            logs = json.load(f)
+        assert len(logs) == 2  # departure + checkpoint_edit
 
     @pytest.mark.asyncio
     async def test_no_match_skips(self, tmp_path: Path) -> None:
@@ -466,6 +521,7 @@ class TestGpsPollingChronologicalGuard:
 
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
+        _write_departure_log(events_dir, "evt1", "u1")
 
         event_repo = EventRepository()
         event_repo._events_dir = events_dir
@@ -510,6 +566,7 @@ class TestGpsPollingChronologicalGuard:
 
         events_dir = tmp_path / "events"
         _setup_event(events_dir, event_data)
+        _write_departure_log(events_dir, "evt1", "u1")
 
         event_repo = EventRepository()
         event_repo._events_dir = events_dir

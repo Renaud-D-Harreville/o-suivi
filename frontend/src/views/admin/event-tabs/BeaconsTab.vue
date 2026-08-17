@@ -93,9 +93,26 @@ function formatCode(beacon: Beacon) {
   beacon.code = beacon.code.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
 }
 
+const duplicateUniqueNumbers = computed(() => {
+  const uniqueBeacons = beacons.value.filter((b) => b.tag === "unique");
+  const seen = new Set<number | null>();
+  const dupes = new Set<number | null>();
+  for (const b of uniqueBeacons) {
+    if (seen.has(b.number)) dupes.add(b.number);
+    seen.add(b.number);
+  }
+  return dupes;
+});
+
 async function handleSave() {
   error.value = "";
   success.value = "";
+
+  if (duplicateUniqueNumbers.value.size > 0) {
+    error.value = "Un tag « unique » ne peut apparaître qu'une seule fois par numéro";
+    return;
+  }
+
   saving.value = true;
 
   try {

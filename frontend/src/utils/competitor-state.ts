@@ -87,7 +87,9 @@ export function reconstructTrackingState(
     switch (log.log_type) {
       case "departure":
         departed = true;
-        departureTime = isoToHms(log.metadata.creation_date);
+        departureTime = log.data?.departure_time
+          ? isoToHms(log.data.departure_time as string)
+          : null;
         break;
       case "departure_cancel":
         departed = false;

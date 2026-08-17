@@ -101,7 +101,7 @@ def test_tracking_departed_competitor() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00"}},
     ])
 
     resp = client.get(f"/api/events/{eid}/tracking", headers=_headers(token))
@@ -128,7 +128,7 @@ def test_tracking_with_checkpoints() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00"}},
         {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:10:00", "received_at": "2026-09-15T07:10:01Z", "author_id": "usr_001"}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00"}},
         {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:30:00", "received_at": "2026-09-15T07:30:01Z", "author_id": "usr_001"}, "data": {"sequence": 2, "code": "CD", "passage_time": "2026-09-15T07:30:00"}},
     ])
@@ -145,7 +145,7 @@ def test_tracking_abandoned_and_tracker() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00"}},
         {"log_type": "abandon", "metadata": {"creation_date": "2026-09-15T07:30:00", "received_at": "2026-09-15T07:30:01Z", "author_id": "usr_001"}, "data": {"comment": "Injury"}},
         {"log_type": "tracker_returned", "metadata": {"creation_date": "2026-09-15T07:35:00", "received_at": "2026-09-15T07:35:01Z", "author_id": "usr_001"}, "data": {"tracker_number": "T42"}},
     ])
@@ -161,7 +161,7 @@ def test_tracking_logs_included() -> None:
     eid = _create_event(token)
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00"}},
     ])
 
     resp = client.get(f"/api/events/{eid}/tracking", headers=_headers(token))
@@ -182,7 +182,7 @@ def test_tracking_multiple_competitors() -> None:
     uid2 = _register(token, eid, "Bob", "Durand", "H")
 
     _write_logs(eid, uid1, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": "usr_001"}, "data": {"departure_time": "2026-09-15T07:00:00"}},
     ])
 
     resp = client.get(f"/api/events/{eid}/tracking", headers=_headers(token))
@@ -222,7 +222,7 @@ def test_tracking_logs_include_author_name() -> None:
 
     uid = _register(token, eid)
     _write_logs(eid, uid, [
-        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": organizer_id}},
+        {"log_type": "departure", "metadata": {"creation_date": "2026-09-15T07:00:00", "received_at": "2026-09-15T07:00:01Z", "author_id": organizer_id}, "data": {"departure_time": "2026-09-15T07:00:00"}},
         {"log_type": "checkpoint_edit", "metadata": {"creation_date": "2026-09-15T07:10:00", "received_at": "2026-09-15T07:10:01Z", "author_id": "public"}, "data": {"sequence": 1, "code": "AB", "passage_time": "2026-09-15T07:10:00"}},
     ])
 

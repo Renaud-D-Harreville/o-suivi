@@ -25,7 +25,7 @@ Définir le mode de départ, l'ordre des concurrents et calculer automatiquement
 | Champ | Type | Description | Défaut |
 |-------|------|-------------|--------|
 | **Personnes par départ** | nombre | Combien de personnes partent en même temps | 1 |
-| **Intervalle** | nombre + unité (min/sec) | Temps entre chaque départ | 2 min |
+| **Intervalle** | nombre | Temps entre chaque départ, en secondes | 120 |
 
 > 💡 Presets rapides : "1 personne / 2 min" (défaut), "2 personnes / 3 min", ou personnalisé.
 
@@ -45,9 +45,9 @@ Tableau ordonné des participants avec horaires et parcours calculés automatiqu
 ### 3.3 Wireframe
 
 ```
-  Personnes par départ : [ 1 ]    Intervalle : [ 2 ] min
+  Personnes par départ : [ 1 ]    Intervalle : [ 120 ] sec
   
-  [ 1/2min ]  [ 2/3min ]  [ Personnalisé ]     ← Presets rapides
+  [ 1/2min ]  [ 2/3min ]     ← Presets rapides
 
 ┌────┬───────┬──────────────────┬──────┬────────────┬─────────┐
 │ ↕  │ Ordre │ Nom / Prénom     │ Sexe │ Parcours   │ Horaire │

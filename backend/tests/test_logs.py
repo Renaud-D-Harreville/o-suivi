@@ -46,7 +46,7 @@ def test_confirm_departure() -> None:
 
     response = client.post(
         f"/api/events/{eid}/registrations/{uid}/depart",
-        json={"creation_date": "2026-09-15T07:30:12Z"},
+        json={"creation_date": "2026-09-15T07:30:12Z", "departure_time": "2026-09-15T07:30:12Z"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -65,7 +65,7 @@ def test_cancel_departure() -> None:
     # First confirm departure
     client.post(
         f"/api/events/{eid}/registrations/{uid}/depart",
-        json={"creation_date": "2026-09-15T07:30:12Z"},
+        json={"creation_date": "2026-09-15T07:30:12Z", "departure_time": "2026-09-15T07:30:12Z"},
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -199,7 +199,7 @@ def test_get_logs_sorted_by_timestamp() -> None:
     # Add entries out of order
     client.post(
         f"/api/events/{eid}/registrations/{uid}/depart",
-        json={"creation_date": "2026-09-15T07:30:12Z"},
+        json={"creation_date": "2026-09-15T07:30:12Z", "departure_time": "2026-09-15T07:30:12Z"},
         headers={"Authorization": f"Bearer {token}"},
     )
     client.post(
@@ -294,7 +294,7 @@ def test_departure_requires_auth() -> None:
 
     response = client.post(
         f"/api/events/{eid}/registrations/{uid}/depart",
-        json={"creation_date": "2026-09-15T07:30:12Z"},
+        json={"creation_date": "2026-09-15T07:30:12Z", "departure_time": "2026-09-15T07:30:12Z"},
     )
     assert response.status_code == 401
 
@@ -522,7 +522,7 @@ def test_get_logs_includes_abandon_and_tracker() -> None:
 
     client.post(
         f"/api/events/{eid}/registrations/{uid}/depart",
-        json={"creation_date": "2026-09-15T07:30:00Z"},
+        json={"creation_date": "2026-09-15T07:30:00Z", "departure_time": "2026-09-15T07:30:00Z"},
         headers={"Authorization": f"Bearer {token}"},
     )
     client.post(
@@ -705,3 +705,128 @@ def test_ph_arrival_edit_missing_passage_time() -> None:
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 422
+
+
+# --- Departure edit tests ---
+
+
+def test_edit_departure_time() -> None:
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _add_registration(token, eid)
+
+    # First confirm departure
+    client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart",
+        json={"creation_date": "2026-09-15T07:30:00Z", "departure_time": "2026-09-15T07:30:00Z"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # Then edit departure time
+    response = client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart-edit",
+        json={"creation_date": "2026-09-15T07:32:00Z", "departure_time": "2026-09-15T07:28:00Z"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["log_type"] == "departure_edit"
+    assert data["data"]["departure_time"] == "2026-09-15T07:28:00Z"
+
+
+def test_edit_departure_time_updates_state() -> None:
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _add_registration(token, eid)
+
+    client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart",
+        json={"creation_date": "2026-09-15T07:30:00Z", "departure_time": "2026-09-15T07:30:00Z"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart-edit",
+        json={"creation_date": "2026-09-15T07:32:00Z", "departure_time": "2026-09-15T07:25:00Z"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    from app.domain.competitor_state import CompetitorState
+    from app.repositories.log_repository import LogRepository
+
+    logs = LogRepository().load(eid, uid)
+    state = CompetitorState()
+    for entry in logs:
+        entry.apply_to(state)
+
+    assert state.departed is True
+    assert state.departure_time == "07:25:00"
+
+
+def test_edit_departure_requires_auth() -> None:
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _add_registration(token, eid)
+
+    response = client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart-edit",
+        json={"creation_date": "2026-09-15T07:32:00Z", "departure_time": "2026-09-15T07:28:00Z"},
+    )
+    assert response.status_code == 401
+
+
+# --- Deduplication tests ---
+
+
+def test_deduplication_same_action_twice() -> None:
+    """Sending the same action (same creation_date + log_type) twice should store only one entry."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _add_registration(token, eid)
+
+    payload = {"creation_date": "2026-09-15T07:30:00Z", "departure_time": "2026-09-15T07:30:00Z"}
+
+    resp1 = client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp1.status_code == 201
+
+    resp2 = client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp2.status_code == 201
+
+    response = client.get(
+        f"/api/events/{eid}/registrations/{uid}/logs",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    logs = response.json()
+    assert len(logs) == 1
+
+
+def test_deduplication_different_types_same_time() -> None:
+    """Different log_types with the same creation_date should both be stored."""
+    token = _get_token()
+    eid = _create_event(token)
+    uid = _add_registration(token, eid)
+
+    client.post(
+        f"/api/events/{eid}/registrations/{uid}/depart",
+        json={"creation_date": "2026-09-15T07:30:00Z", "departure_time": "2026-09-15T07:30:00Z"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    client.post(
+        f"/api/events/{eid}/registrations/{uid}/bag-weight",
+        json={"creation_date": "2026-09-15T07:30:00Z", "moment": "start", "weight_kg": 8.5},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    response = client.get(
+        f"/api/events/{eid}/registrations/{uid}/logs",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    logs = response.json()
+    assert len(logs) == 2

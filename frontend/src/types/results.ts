@@ -2,7 +2,7 @@ export interface BeaconResult {
   sequence: number;
   beacon_number: number;
   tag: string;
-  gate: string | null;
+  is_ph: boolean;
   expected_code: string | null;
   entered_code: string | null;
   valid: boolean | null;
@@ -29,6 +29,9 @@ export interface CompetitorResult {
   valid_global: boolean | null;
   dns: boolean;
   abandoned: boolean;
+  finished: boolean;
+  has_tracker: boolean;
+  tracker_returned: boolean;
   bag_weight_start: number | null;
   bag_weight_end: number | null;
   departure_time: string | null;
@@ -39,23 +42,16 @@ export interface CompetitorResult {
   beacons: BeaconResult[];
 }
 
-export interface PublicCompetitorResult extends CompetitorResult {
-  finished: boolean;
-  has_tracker: boolean;
-  tracker_returned: boolean;
-}
-
 export interface ResultsData {
-  routechoices_url: string | null;
-  competitors: CompetitorResult[];
-}
-
-export interface PublicResultsData {
   routechoices_url: string | null;
   public_routechoices_time: string | null;
   event_date: string | null;
-  competitors: PublicCompetitorResult[];
+  competitors: CompetitorResult[];
 }
+
+export type PublicCompetitorResult = CompetitorResult;
+
+export type PublicResultsData = ResultsData;
 
 export interface TemplateSummary {
   id: string;

@@ -71,9 +71,9 @@ data/
 | `password` | string \| null | Mot de passe en clair (encadrants uniquement) — TODO: bcrypt avant production |
 | `routechoices_id` | string \| null | Identifiant Routechoices (unique, optionnel). Clé de déduplication fiable entre événements |
 | `role` | `"organizer"` \| `"competitor"` | Rôle de l'utilisateur |
-| `first_name` | string | Prénom |
-| `last_name` | string | Nom |
-| `phone` | string | Numéro de téléphone |
+| `first_name` | string | Prénom (défaut : `""`) |
+| `last_name` | string | Nom (défaut : `""`) |
+| `phone` | string | Numéro de téléphone (défaut : `""`) |
 | `sex` | `"H"` \| `"F"` \| null | Sexe (non obligatoire) |
 
 ### 3.2 `templates/{template_id}.json`
@@ -199,7 +199,8 @@ Exemple complet :
       "creation_date": "2026-09-15T07:30:12Z",
       "received_at": "2026-09-15T07:30:13+00:00",
       "author_id": "uuid_encadrant"
-    }
+    },
+    "data": { "departure_time": "2026-09-15T07:30:12Z" }
   },
   {
     "log_type": "checkpoint",
@@ -262,12 +263,12 @@ Exemple complet :
 
 | `log_type` | Auteur | Data | Description |
 |------|--------|-----------------------------------------|-------------|
-| `departure` | encadrant | — | Départ confirmé (heure réelle = `metadata.creation_date`) |
+| `departure` | encadrant | `{ departure_time }` | Départ confirmé |
 | `departure_cancel` | encadrant | — | Annulation du départ |
 | `departure_edit` | encadrant | `{ departure_time }` | Correction de l'heure de départ |
-| `checkpoint` | stagiaire ou encadrant | `{ sequence, code }` | Code balise saisi (heure de passage = `metadata.creation_date`) |
-| `checkpoint_edit` | encadrant, public ou **gps** | `{ sequence, code?, passage_time?, comment? }` | Correction d'un checkpoint (`passage_time` = horaire de passage corrigé, distinct de `metadata.creation_date`) |
-| `ph_arrival` | stagiaire ou encadrant | `{ sequence }` | Arrivée à la PH (étape 1) |
+| `checkpoint` | stagiaire ou encadrant | `{ sequence, code, passage_time? }` | Code balise saisi (`passage_time` = heure de passage si connue, sinon null) |
+| `checkpoint_edit` | encadrant, public ou **gps** | `{ sequence, code?, passage_time?, comment? }` | Correction d'un checkpoint |
+| `ph_arrival` | stagiaire ou encadrant | `{ sequence, passage_time? }` | Arrivée à la PH (`passage_time` = heure d'arrivée si connue, sinon null) |
 | `ph_arrival_edit` | encadrant, public ou **gps** | `{ sequence, passage_time }` | Correction de l'heure d'arrivée à une PH |
 | `skip` | stagiaire ou encadrant | `{ checkpoint }` | Saut d'une balise |
 | `skip_cancel` | stagiaire ou encadrant | `{ checkpoint }` | Annulation d'un saut |
@@ -312,6 +313,6 @@ Chaque checkpoint dans le `CompetitorState` contient :
 2. Au retour réseau, les événements sont envoyés au serveur via `POST .../registrations/{uid}/log` (en liste)
 3. Le serveur **ajoute** les entrées à la fin du fichier (append-only, pas de tri à l'écriture)
 4. Chaque entrée reçoit un `received_at` (horodatage serveur) pour traçabilité
-5. **Déduplication** : si une entrée avec le même `creation_date + type + sequence` existe déjà, elle est ignorée
+5. **Déduplication** : si une entrée avec le même `creation_date + log_type` existe déjà, elle est ignorée
 6. En cas de conflit sur la même séquence (ex: deux `checkpoint` pour la séquence 5), le `creation_date` le plus récent fait foi (résolu dynamiquement au tri)
 7. L'historique complet est conservé — les encadrants peuvent voir et corriger si nécessaire

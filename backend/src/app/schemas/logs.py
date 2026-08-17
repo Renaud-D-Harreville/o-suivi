@@ -32,6 +32,10 @@ class CommentData(BaseModel):
 
 
 
+class DepartureData(BaseModel):
+    departure_time: str = Field(min_length=1)
+
+
 class BagWeightData(BaseModel):
     moment: Literal["start", "end"]
     weight_kg: float = Field(gt=0)
@@ -48,6 +52,7 @@ class DepartureEditData(BaseModel):
 class CheckpointData(BaseModel):
     sequence: int = Field(ge=1)
     code: str = Field(min_length=2, max_length=2)
+    passage_time: str | None = None
 
 
 class CheckpointEditData(BaseModel):
@@ -59,6 +64,7 @@ class CheckpointEditData(BaseModel):
 
 class PhArrivalData(BaseModel):
     sequence: int = Field(ge=1)
+    passage_time: str | None = None
 
 
 class PhArrivalEditData(BaseModel):
@@ -87,10 +93,11 @@ class BaseLogEntry(BaseModel):
 
 class DepartureLog(BaseLogEntry):
     log_type: Literal["departure"] = "departure"
+    data: DepartureData | None = None
 
     def apply_to(self, state: CompetitorState) -> None:
         state.departed = True
-        state.departure_time = to_hms(self.metadata.creation_date)
+        state.departure_time = to_hms(self.data.departure_time) if self.data else None
 
 
 class DepartureCancelLog(BaseLogEntry):
@@ -178,7 +185,7 @@ class CheckpointLog(BaseLogEntry):
         state.checkpoints[self.data.sequence] = CheckpointEntry(
             sequence=self.data.sequence,
             code=self.data.code,
-            passage_time=to_hms(self.metadata.creation_date),
+            passage_time=to_hms(self.data.passage_time),
             author_id=self.metadata.author_id,
         )
 
@@ -203,7 +210,7 @@ class PhArrivalLog(BaseLogEntry):
     data: PhArrivalData
 
     def apply_to(self, state: CompetitorState) -> None:
-        state.ph_arrivals[self.data.sequence] = to_hms(self.metadata.creation_date)
+        state.ph_arrivals[self.data.sequence] = to_hms(self.data.passage_time)
 
 
 class PhArrivalEditLog(BaseLogEntry):
@@ -261,7 +268,9 @@ class BaseRequest(BaseModel):
     creation_date: str
 
 
-DepartureRequest = BaseRequest
+class DepartureRequest(BaseRequest):
+    departure_time: str = Field(min_length=1)
+
 DepartureCancelRequest = BaseRequest
 TrackerReturnedCancelRequest = BaseRequest
 

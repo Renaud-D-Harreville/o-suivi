@@ -63,7 +63,7 @@ Identique à l'onglet [Parcours du template](../templates/courses.md) : tableau 
 | Action | Description |
 |--------|-------------|
 | **Ajouter un parcours** | Ajoute une nouvelle colonne |
-| **Supprimer un parcours** | Bouton ✗ en haut de la colonne (avec confirmation) |
+| **Supprimer un parcours** | Bouton ✗ en haut de la colonne |
 | **Sélectionner une variante** | Dropdown dans chaque cellule à variantes |
 | **Enregistrer** | Sauvegarde en BDD sans quitter la page |
 

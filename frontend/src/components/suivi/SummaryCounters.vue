@@ -17,7 +17,7 @@ function getGatesForCompetitor(comp: TrackingCompetitor): TimeGateEntry[] {
 const counters = computed(() => {
   const all = props.competitors;
   const waiting = all.filter((c) => !c.departed && !c.dns).length;
-  const departed = all.filter((c) => c.departed && !c.dns && !c.abandoned);
+  const departed = all.filter((c) => c.departed && !c.dns);
   const arrived = all.filter((c) => c.current_ph === "Arrivé");
   const dnsCount = all.filter((c) => c.dns).length;
   const abandonCount = all.filter((c) => c.abandoned).length;

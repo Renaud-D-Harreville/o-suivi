@@ -20,12 +20,12 @@ export function useDepartureActions(
   async function confirmDeparture(userId: string): Promise<void> {
     pending.value = true;
     try {
-      const creation_date = toLocalISO(new Date());
+      const now = toLocalISO(new Date());
       const res = await apiFetch(
         `/api/events/${eventId}/registrations/${userId}/depart`,
         {
           method: "POST",
-          body: JSON.stringify({ creation_date }),
+          body: JSON.stringify({ creation_date: now, departure_time: now }),
         },
       );
       if (res.ok) {

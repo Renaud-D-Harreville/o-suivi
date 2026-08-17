@@ -232,48 +232,59 @@ Quand une action est déclenchée (départ, checkpoint-edit, abandon, etc.) :
 
 ```
 backend/
-├── app/
-│   ├── main.py                    # FastAPI app entrypoint
-│   ├── config.py                  # Settings (JWT, paths)
-│   ├── dependencies.py            # Auth dependency (require_organizer)
-│   ├── routers/                   # Endpoints groupés
-│   │   ├── auth.py                # POST /api/auth/login
-│   │   ├── templates.py           # CRUD templates + beacons/courses/time-gates
-│   │   ├── events.py              # CRUD events + import-template + tracking
-│   │   ├── registrations.py       # CRUD inscriptions + checkpoints
-│   │   ├── logs.py                # Actions d'épreuve (encadrant, auth requise)
-│   │   ├── results.py             # GET résultats (encadrant, auth requise)
-│   │   ├── public.py              # Endpoints publics (sans auth)
-│   │   └── ws.py                  # WebSocket (signal refresh)
-│   ├── services/                  # Orchestration (coordonne repos + domain)
-│   │   ├── results_service.py     # Calcul des résultats (orchestration)
-│   │   ├── tracking_service.py    # Données de suivi agrégées
-│   │   ├── checkpoint_service.py  # Récupération checkpoints d'un concurrent
-│   │   ├── log_service.py         # Création/append de logs (partagé admin + public)
-│   │   └── registration_service.py # CRUD inscriptions, déduplication, matching
-│   ├── domain/                    # Logique métier pure
-│   │   ├── exceptions.py          # Exceptions domaine (EntityNotFound)
-│   │   ├── competitor_state.py    # CompetitorState + CheckpointEntry
-│   │   ├── beacon_analyzer.py     # Analyse passages balises
-│   │   ├── section_validator.py   # Validation sections PH
-│   │   ├── results_calculator.py  # Logique métier résultats (validité, finish, tri)
-│   │   └── time_utils.py          # Utilitaires temps
-│   ├── repositories/              # Accès données (objets typés)
-│   │   ├── event_repository.py
-│   │   ├── template_repository.py
-│   │   ├── log_repository.py
-│   │   └── user_repository.py
-│   ├── schemas/                   # Modèles Pydantic (DTOs, entités, unions)
-│   │   ├── auth.py
-│   │   ├── templates.py
-│   │   ├── events.py
-│   │   ├── registrations.py
-│   │   ├── users.py
-│   │   ├── results.py
-│   │   ├── tracking.py
-│   │   └── logs.py
-│   └── websocket/
-│       └── connection_manager.py  # Gestion connexions WS par événement
+├── src/
+│   └── app/
+│       ├── main.py                    # FastAPI app entrypoint
+│       ├── config.py                  # Settings (JWT, paths)
+│       ├── dependencies.py            # Auth dependency (require_organizer)
+│       ├── routers/                   # Endpoints groupés
+│       │   ├── auth.py                # POST /api/auth/login
+│       │   ├── templates.py           # CRUD templates + beacons/courses/time-gates
+│       │   ├── events.py              # CRUD events + import-template + tracking
+│       │   ├── registrations.py       # CRUD inscriptions + checkpoints
+│       │   ├── logs.py                # Actions d'épreuve (encadrant, auth requise)
+│       │   ├── results.py             # GET résultats (encadrant, auth requise)
+│       │   ├── public.py              # Endpoints publics (sans auth)
+│       │   └── ws.py                  # WebSocket (signal refresh)
+│       ├── services/                  # Orchestration (coordonne repos + domain)
+│       │   ├── results_service.py     # Calcul des résultats (orchestration)
+│       │   ├── tracking_service.py    # Données de suivi agrégées
+│       │   ├── checkpoint_service.py  # Récupération checkpoints d'un concurrent
+│       │   ├── log_service.py         # Création/append de logs (partagé admin + public)
+│       │   ├── split_service.py       # Calcul des temps intermédiaires comparés
+│       │   ├── schedule_service.py    # Construction réponse horaires publique
+│       │   ├── routechoices_service.py # Intégration Routechoices (résolution event_id + GPS)
+│       │   ├── gps_polling_service.py # Polling GPS et injection de logs balises
+│       │   ├── gps_polling_task.py    # Tâche de fond périodique GPS
+│       │   └── registration_service.py # CRUD inscriptions, déduplication, matching
+│       ├── domain/                    # Logique métier pure
+│       │   ├── exceptions.py          # Exceptions domaine (EntityNotFound)
+│       │   ├── competitor_state.py    # CompetitorState + CheckpointEntry
+│       │   ├── beacon_analyzer.py     # Analyse passages balises
+│       │   ├── section_validator.py   # Validation sections PH
+│       │   ├── results_calculator.py  # Logique métier résultats (validité, finish, tri)
+│       │   ├── split_calculator.py    # Extraction paires de balises + calcul splits
+│       │   ├── geo_utils.py           # Utilitaires géographiques (distance GPS)
+│       │   ├── gps_decoder.py         # Décodage des données GPS brutes Routechoices
+│       │   └── time_utils.py          # Utilitaires temps
+│       ├── repositories/              # Accès données (objets typés)
+│       │   ├── event_repository.py
+│       │   ├── template_repository.py
+│       │   ├── log_repository.py
+│       │   └── user_repository.py
+│       ├── schemas/                   # Modèles Pydantic (DTOs, entités, unions)
+│       │   ├── auth.py
+│       │   ├── templates.py
+│       │   ├── events.py
+│       │   ├── registrations.py
+│       │   ├── users.py
+│       │   ├── results.py
+│       │   ├── tracking.py
+│       │   ├── splits.py
+│       │   ├── routechoices.py
+│       │   └── logs.py
+│       └── websocket/
+│           └── connection_manager.py  # Gestion connexions WS par événement
 ├── tests/
 ├── data/                          # Stockage JSON
 ├── Dockerfile
@@ -316,7 +327,7 @@ backend/
 
 | Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/api/events` | Liste des événements |
+| GET | `/api/events` | Liste des événements (public — sans auth, pour permettre le cache offline `eventListCache`) |
 | POST | `/api/events` | Créer un événement (nom) |
 | GET | `/api/events/{id}` | Détail complet d'un événement |
 | PATCH | `/api/events/{id}` | Modifier un événement (merge partiel) |
@@ -324,6 +335,7 @@ backend/
 | GET | `/api/events/{id}/tracking` | Données de suivi agrégées (état complet de tous les concurrents pour les vues Départ et Suivi) |
 | GET | `/api/events/{id}/routechoices/gps` | Récupération ponctuelle des données GPS Routechoices (payload brut) |
 | GET | `/api/events/{id}/resultats` | Résultats provisoires (tous les concurrents) |
+| GET | `/api/events/{id}/gps-status` | Statut GPS par concurrent (dernière position connue) |
 
 > 💡 **Enrichissement des parcours** : même principe que pour les templates — les endpoints GET retournent les `courses[].beacons` enrichis, les endpoints PATCH acceptent des listes d'`id`.
 
@@ -460,6 +472,8 @@ Ces endpoints sont accessibles sans JWT. Ils servent la vue publique résultats 
 | Méthode | Endpoint | Description |
 |---|---|---|
 | GET | `/api/public/events/{id}/resultats` | Résultats provisoires (même réponse que `GET /api/events/{id}/resultats`) |
+| GET | `/api/public/events/{id}/schedule` | Horaires de départ publics |
+| GET | `/api/public/events/{id}/splits` | Temps intermédiaires comparés entre concurrents |
 | GET | `/api/public/events/{id}/competitors/{uid}/checkpoints` | Checkpoints d'un concurrent (code + horaire, état reconstruit) |
 | POST | `/api/public/events/{id}/competitors/{uid}/checkpoint-edit` | Édition d'une balise — `author_id = "public"` |
 | POST | `/api/public/events/{id}/competitors/{uid}/ph-arrival-edit` | Correction heure d'arrivée PH — `author_id = "public"` |

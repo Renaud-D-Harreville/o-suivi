@@ -61,7 +61,7 @@ Tableau entièrement modifiable, une ligne par balise :
 | Action | Description |
 |--------|-------------|
 | **Ajouter** | Nouvelle ligne vide en bas du tableau |
-| **Supprimer** | Bouton ✗ sur chaque ligne (avec confirmation) |
+| **Supprimer** | Bouton ✗ sur chaque ligne |
 | **Modifier** | Tous les champs sont éditables directement (N°, tag, PH, code) |
 | **Enregistrer** | Sauvegarde en BDD sans quitter la page |
 

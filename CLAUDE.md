@@ -257,6 +257,7 @@ o-suivi/
 │   │       │   ├── events.py             ← GET/POST /api/events, GET/PATCH /api/events/{id}, POST import-template
 │   │       │   ├── registrations.py      ← GET/POST/DELETE/PUT/PATCH /api/events/{id}/registrations, GET checkpoints
 │   │       │   ├── logs.py               ← POST actions d'épreuve (départ, DNS, abandon, tracker, checkpoints, PH…) + GET logs
+│   │       │   ├── results.py            ← GET /api/events/{id}/resultats (résultats provisoires)
 │   │       │   ├── public.py             ← Endpoints publics sans auth (résultats, checkpoints, éditions balises/PH)
 │   │       │   └── ws.py                 ← WebSocket endpoint /api/events/{id}/ws (real-time refresh signal)
 │   │       ├── websocket/
@@ -269,6 +270,8 @@ o-suivi/
 │   │       │   ├── split_service.py       ← Calcul des temps intermédiaires comparés (splits)
 │   │       │   ├── schedule_service.py    ← Construction de la réponse horaires publique
 │   │       │   ├── routechoices_service.py ← Intégration minimale Routechoices (résolution event_id + fetch GPS brut)
+│   │       │   ├── gps_polling_service.py ← Polling GPS : analyse proximité balises + injection logs
+│   │       │   ├── gps_polling_task.py    ← Tâche de fond périodique pour le polling GPS
 │   │       │   └── registration_service.py ← Logique inscriptions (CRUD, déduplication, matching)
 │   │       ├── domain/
 │   │       │   ├── exceptions.py          ← Exceptions domaine (EntityNotFound)
@@ -277,6 +280,8 @@ o-suivi/
 │   │       │   ├── section_validator.py   ← Validation des sections PH
 │   │       │   ├── results_calculator.py  ← Logique métier résultats (validité, finish, tri)
 │   │       │   ├── split_calculator.py    ← Extraction paires de balises + calcul des splits
+│   │       │   ├── geo_utils.py           ← Utilitaires géographiques (distance entre coordonnées GPS)
+│   │       │   ├── gps_decoder.py         ← Décodage des données GPS brutes Routechoices
 │   │       │   └── time_utils.py          ← Utilitaires temps
 │   │       ├── repositories/
 │   │       │   ├── event_repository.py    ← CRUD événements (objets typés)
@@ -361,6 +366,7 @@ o-suivi/
         │   ├── useCompetitorActions.ts ← Suivi actions (abandon, tracker returned) + pending guard
         │   ├── useInlineEdit.ts       ← Generic inline field editing (edit/cancel/save state)
         │   ├── useDepartureActions.ts ← Departure actions (depart, DNS, registration edits) + pending guard
+        │   ├── useGpsStatus.ts        ← GPS status composable (fetch/display last known GPS position per competitor)
         │   ├── useToast.ts            ← Global toast notifications (error/success/info)
         │   ├── usePrompt.ts           ← Custom prompt modal (replaces browser prompt())
         │   ├── useOfflineStatus.ts    ← Offline status composable (online, syncing, pendingCount, syncNow)
@@ -368,6 +374,7 @@ o-suivi/
         ├── router/
         │   └── index.ts               ← Routes (/login, /admin, /admin/events/:id/config, /suivi) + auth guard + redirects (/depart, /resultats → /suivi)
         ├── components/
+        │   ├── AdminBackLink.vue      ← Back-to-admin navigation link
         │   ├── CreateModal.vue        ← Reusable creation popup (name field)
         │   ├── EventHeader.vue        ← Shared sticky header (back + event name + Config/Suivi nav)
         │   ├── ToastNotification.vue  ← Global toast notifications (auto-dismiss, error/success/info)

@@ -112,10 +112,11 @@ class BaseLogEntry(BaseModel):
 
 class DepartureLog(BaseLogEntry):
     log_type: Literal["departure"] = "departure"
+    data: DepartureData
 
     def apply_to(self, state: "CompetitorState") -> None:
         state.departed = True
-        state.departure_time = self.metadata.creation_date
+        state.departure_time = to_hms(self.data.departure_time)
 
 class CheckpointLog(BaseLogEntry):
     log_type: Literal["checkpoint"] = "checkpoint"
@@ -125,7 +126,7 @@ class CheckpointLog(BaseLogEntry):
         state.checkpoints[self.data.sequence] = CheckpointEntry(
             sequence=self.data.sequence,
             code=self.data.code,
-            passage_time=self.metadata.creation_date,
+            passage_time=to_hms(self.data.passage_time),
         )
 ```
 
@@ -235,8 +236,8 @@ checkpoints: dict[int, dict] = {}  # sequence -> {code, passage_time}
 
 ```python
 class CheckpointEntry(BaseModel):
-    code: str
-    passage_time: str
+    code: str | None = None
+    passage_time: str | None = None
 
 class CompetitorState(BaseModel):
     checkpoints: dict[int, CheckpointEntry] = Field(default_factory=dict)
@@ -276,7 +277,7 @@ items: list           # Items de quel type ?
 ```python
 creation_date: str    # Quand l'action a été créée (horloge client)
 received_at: str      # Quand le serveur a reçu l'entrée
-passage_time: str     # Quand le concurrent est passé à la balise
+passage_time: str | None  # Quand le concurrent est passé à la balise (None si inconnu)
 weight_kg: float      # Le poids du sac en kg
 ```
 

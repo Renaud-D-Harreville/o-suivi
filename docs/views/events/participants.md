@@ -50,7 +50,7 @@ Tableau entièrement modifiable, une ligne par participant :
 | **Importer CSV** | Import d'un fichier CSV avec les colonnes Nom, Prénom, Sexe, Téléphone, ID Routechoices. Déduplique via routechoices_id puis nom+prénom. Crée les utilisateurs en BDD s'ils n'existent pas, puis les inscrit à l'événement |
 | **Ajouter** | Bouton « + Ajouter un participant » qui insère une ligne vide éditable en bas du tableau |
 | **Modifier** | Tous les champs sont éditables directement dans le tableau |
-| **Supprimer** | Bouton ✗ sur chaque ligne (avec confirmation) — désinscrit le participant de l'événement |
+| **Supprimer** | Bouton ✗ sur chaque ligne — désinscrit le participant de l'événement |
 | **Enregistrer** | Sauvegarde en BDD sans quitter la page |
 
 ---

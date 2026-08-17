@@ -58,7 +58,7 @@ Tableau entièrement modifiable, une ligne par balise :
 | Action | Description |
 |--------|-------------|
 | **Ajouter** | Nouvelle ligne vide en bas du tableau |
-| **Supprimer** | Bouton ✗ sur chaque ligne (avec confirmation) |
+| **Supprimer** | Bouton ✗ sur chaque ligne |
 | **Modifier** | Tous les champs sont éditables directement dans le tableau |
 | **Enregistrer** | Bouton en bas de page — sauvegarde en BDD sans quitter la page |
 

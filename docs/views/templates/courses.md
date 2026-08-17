@@ -65,7 +65,7 @@ Tableau en grille : les **lignes** sont les numéros de balises, les **colonnes*
 | Action | Description |
 |--------|-------------|
 | **Ajouter un parcours** | Ajoute une nouvelle colonne (numérotée automatiquement) |
-| **Supprimer un parcours** | Bouton ✗ en haut de la colonne (avec confirmation) |
+| **Supprimer un parcours** | Bouton ✗ en haut de la colonne |
 | **Sélectionner une variante** | Dropdown dans chaque cellule à variantes |
 | **Enregistrer** | Sauvegarde en BDD sans quitter la page |
 

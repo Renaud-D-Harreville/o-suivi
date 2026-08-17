@@ -16,6 +16,7 @@ from app.schemas.logs import (
     CommentData,
     DepartureCancelLog,
     DepartureCancelRequest,
+    DepartureData,
     DepartureEditData,
     DepartureEditLog,
     DepartureEditRequest,
@@ -55,7 +56,10 @@ async def confirm_departure(
     current_user: TokenPayload = Depends(require_organizer),
 ) -> DepartureLog:
     svc = _service()
-    entry = DepartureLog(metadata=svc.build_metadata(body.creation_date, current_user.user_id))
+    entry = DepartureLog(
+        metadata=svc.build_metadata(body.creation_date, current_user.user_id),
+        data=DepartureData(departure_time=body.departure_time),
+    )
     await svc.append_and_notify(event_id, user_id, entry)
     return entry
 
